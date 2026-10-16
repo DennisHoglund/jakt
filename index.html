@@ -144,6 +144,22 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .chip { display: inline-flex; gap: 6px; align-items: baseline; font-size: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; }
 .chip-l { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .chip.off span:last-child { color: #FF8A73; }
+/* Hitta tillbaka */
+.back-empty p { margin: 0; color: var(--muted); font-size: 16px; max-width: 40ch; }
+.back-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.back-dial { width: min(300px, 78vw, 42dvh); height: auto; display: block; }
+.back-actions { display: flex; flex-direction: column; gap: 10px; }
+.btn {
+  min-height: 50px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--fg); font-weight: 600; font-size: 16px; padding: 0 16px;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #1B1406; }
+.btn.danger { background: none; color: #FF8A73; border-color: #45201A; }
+.toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
+.toggle input { width: 22px; height: 22px; accent-color: var(--accent); }
+.back-note { margin: 0; font-size: 13px; color: var(--muted); }
+.start-icon { background: none; border: 0; }
+
 .klass-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 .empty { color: var(--muted); font-size: 15px; padding: 8px 0; }
 .closed-list { font-size: 14px; color: var(--muted); }
@@ -267,7 +283,7 @@ nav svg { width: 24px; height: 24px; }
       </g>
     </svg>
   </div>
-  <button class="compass-btn" id="compassBtn" type="button" hidden>Aktivera kompass</button>
+  <button class="compass-btn" id="compassBtn" data-compass type="button" hidden>Aktivera kompass</button>
 
   <section class="reading">
     <div class="big" id="big">Hämtar vind…</div>
@@ -327,11 +343,61 @@ nav svg { width: 24px; height: 24px; }
   </footer>
 </section>
 
+<section class="page" id="pageBack" hidden aria-labelledby="backTitle">
+  <header class="top">
+    <div class="title-row">
+      <button class="menu-btn" type="button" data-menu aria-label="Öppna menyn" aria-controls="drawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div>
+        <div class="eyebrow">Startpunkt</div>
+        <h1 id="backTitle">Hitta tillbaka</h1>
+      </div>
+    </div>
+    <div class="meta" id="backMeta">&nbsp;</div>
+  </header>
+
+  <div class="back-empty" id="backEmpty">
+    <p>Sätt en startpunkt där du börjar vandringen eller jakten. Sedan visar en pil vägen tillbaka, även utan täckning.</p>
+  </div>
+
+  <div class="back-nav" id="backNav" hidden>
+    <svg class="back-dial" viewBox="0 0 300 300" role="img" id="backDial" aria-label="Riktning till startpunkten">
+      <circle cx="150" cy="150" r="138" fill="#1A2B22" stroke="#2E4436" stroke-width="2"/>
+      <circle cx="150" cy="150" r="90" fill="none" stroke="#2E4436" stroke-width="1" stroke-dasharray="3 6"/>
+      <path d="M150 4 l-7 12 h14 z" fill="#E8EDE4"/>
+      <g id="backArrow" transform="rotate(0 150 150)">
+        <path d="M150 34 L196 112 H166 V236 H134 V112 H104 Z" fill="#E07A3F" stroke="#FFF" stroke-width="3" stroke-linejoin="round"/>
+      </g>
+    </svg>
+    <div class="reading">
+      <div class="big" id="backDist">–</div>
+      <div class="sub" id="backDir">&nbsp;</div>
+      <div class="rel" id="backHint">&nbsp;</div>
+    </div>
+  </div>
+
+  <button class="compass-btn" data-compass type="button" hidden>Aktivera kompass</button>
+
+  <div class="back-actions">
+    <button class="btn primary" type="button" id="setStart">Sätt startpunkt här</button>
+    <button class="btn" type="button" id="showStartMap" hidden>Visa på kartan</button>
+    <label class="toggle" id="wakeRow" hidden><input type="checkbox" id="wakeChk"> Håll skärmen tänd</label>
+    <button class="btn danger" type="button" id="clearStart" hidden>Ta bort startpunkten</button>
+    <p class="lan-hint" id="backMsg" role="status" aria-live="polite"></p>
+  </div>
+
+  <p class="back-note">Positionen följs bara när appen är öppen. Ha telefonen upplåst med appen framme när du letar dig tillbaka.</p>
+</section>
+
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" aria-label="Meny" hidden>
   <div class="drawer-head">Jaktvind</div>
   <button type="button" class="drawer-item" data-page="vind" aria-current="page">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind
+  </button>
+  <button type="button" class="drawer-item" data-page="back">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6"/></svg>Hitta tillbaka
   </button>
   <button type="button" class="drawer-item" data-page="jakt">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Jakttider
@@ -341,7 +407,7 @@ nav svg { width: 24px; height: 24px; }
 <nav aria-label="Flikar">
   <button type="button" aria-current="page" id="navVind" data-page="vind"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind</button>
   <button type="button" disabled title="Kommer i steg 2"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus</button>
-  <button type="button" disabled title="Kommer i steg 3"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Platser</button>
+  <button type="button" data-page="back"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6"/></svg>Start</button>
   <button type="button" disabled title="Kommer i steg 4"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
 </nav>
 
@@ -525,6 +591,7 @@ nav svg { width: 24px; height: 24px; }
     shown = norm(shown + delta * 0.2);
     $('rose').setAttribute('transform', `rotate(${-shown} 150 150)`);
     rotateHunter();
+    if (page === 'back') updateBack();
     if (ts - lastRel > 250) { updateRel(); lastRel = ts; }
     if (Math.abs(delta) > 0.3) requestAnimationFrame(tick); else { animating = false; updateRel(); }
   }
@@ -533,20 +600,20 @@ nav svg { width: 24px; height: 24px; }
   function listen() {
     if ('ondeviceorientationabsolute' in window) window.addEventListener('deviceorientationabsolute', onAbs, true);
     else window.addEventListener('deviceorientation', onOri, true);
-    $('compassBtn').hidden = true;
+    document.querySelectorAll('[data-compass]').forEach((b) => { b.hidden = true; });
   }
   const needsPermission = typeof DeviceOrientationEvent !== 'undefined'
     && typeof DeviceOrientationEvent.requestPermission === 'function';
 
-  $('compassBtn').addEventListener('click', async () => {
+  document.querySelectorAll('[data-compass]').forEach((btn) => btn.addEventListener('click', async () => {
     try {
       const p = await DeviceOrientationEvent.requestPermission();
       if (p === 'granted') listen();
       else setStatus('Kompassen nekades. Stäng appen helt och öppna den igen för att få frågan på nytt.');
     } catch (e) { setStatus('Kompassen är inte tillgänglig på den här enheten.'); }
-  });
+  }));
 
-  if (needsPermission) $('compassBtn').hidden = false;
+  if (needsPermission) document.querySelectorAll('[data-compass]').forEach((b) => { b.hidden = false; });
   else if (typeof DeviceOrientationEvent !== 'undefined') listen();
 
   // Karta
@@ -563,6 +630,15 @@ nav svg { width: 24px; height: 24px; }
     <circle cx="150" cy="148" r="9.5" fill="#E07A3F" stroke="#FFF" stroke-width="1.8"/>
     <circle cx="150" cy="148" r="3" fill="#B5531F"/></svg></div>`;
   let map = null, marker = null, accCircle = null, cone = null, watchId = null, follow = true;
+  let startMarker = null, startLine = null;
+  let start = null;
+  try { start = JSON.parse(localStorage.getItem(KEY + '.start')); } catch (e) {}
+  // Startpunkt: flagga på en pinne, spetsen markerar platsen
+  const PIN_SVG = `<svg viewBox="0 0 40 48" width="40" height="48" aria-hidden="true">
+    <ellipse cx="13" cy="45" rx="7" ry="2.5" fill="#000" fill-opacity="0.35"/>
+    <line x1="13" y1="45" x2="13" y2="5" stroke="#FFF" stroke-width="5" stroke-linecap="round"/>
+    <line x1="13" y1="45" x2="13" y2="5" stroke="#2A2118" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M14 6h20l-5 7 5 7H14z" fill="#E07A3F" stroke="#FFF" stroke-width="2" stroke-linejoin="round"/></svg>`;
 
   function initMap() {
     if (typeof L === 'undefined') { $('mapMsg').textContent = 'Kartan kunde inte laddas. Öppna appen med täckning en gång så sparas den.'; return false; }
@@ -621,6 +697,13 @@ nav svg { width: 24px; height: 24px; }
       if (!cone) cone = L.polygon(pts, { color: '#D9A441', weight: 1.5, opacity: 0.9, fillColor: '#D9A441', fillOpacity: 0.28, interactive: false }).addTo(map);
       else cone.setLatLngs(pts);
     }
+    if (start) {
+      const cl = [start.lat, start.lon];
+      if (!startMarker) {
+        startMarker = L.marker(cl, { icon: L.divIcon({ className: 'start-icon', html: PIN_SVG, iconSize: [40, 48], iconAnchor: [13, 45] }), keyboard: false, interactive: false }).addTo(map);
+        startLine = L.polyline([ll, cl], { color: '#FFFFFF', weight: 2.5, opacity: 0.85, dashArray: '6 8', interactive: false }).addTo(map);
+      } else { startMarker.setLatLng(cl); startLine.setLatLngs([ll, cl]); }
+    } else if (startMarker) { map.removeLayer(startMarker); map.removeLayer(startLine); startMarker = startLine = null; }
     if (follow) map.setView(ll, Math.max(map.getZoom(), 15), { animate: false });
     rotateHunter();
   }
@@ -630,10 +713,16 @@ nav svg { width: 24px; height: 24px; }
     watchId = navigator.geolocation.watchPosition((p) => {
       pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
       updateMap();
+      updateBack();
     }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
   }
   function stopWatch() {
     if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  }
+  // GPS behövs när kartan eller hitta tillbaka-sidan är synlig
+  function syncWatch() {
+    const need = (page === 'vind' && !$('mapView').hidden) || page === 'back';
+    if (need) startWatch(); else stopWatch();
   }
 
   function setView(v) {
@@ -646,8 +735,8 @@ nav svg { width: 24px; height: 24px; }
     if (isMap) {
       if (!map && !initMap()) return;
       setTimeout(() => { map.invalidateSize(); follow = true; updateMap(); }, 0);
-      startWatch();
-    } else stopWatch();
+    }
+    syncWatch();
   }
   $('segCompass').addEventListener('click', () => setView('compass'));
   $('segMap').addEventListener('click', () => setView('map'));
@@ -664,12 +753,15 @@ nav svg { width: 24px; height: 24px; }
     page = p;
     document.querySelector('main').hidden = p !== 'vind';
     $('pageJakt').hidden = p !== 'jakt';
-    document.querySelectorAll('.drawer-item').forEach((b) => {
+    $('pageBack').hidden = p !== 'back';
+    document.querySelectorAll('.drawer-item, nav [data-page]').forEach((b) => {
       if (b.dataset.page === p) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
-    if (p === 'vind') $('navVind').setAttribute('aria-current', 'page'); else $('navVind').removeAttribute('aria-current');
-    if (p === 'jakt') { renderJakt(); detectLan(); stopWatch(); }
-    else if (!$('mapView').hidden) { startWatch(); setTimeout(() => { if (map) map.invalidateSize(); }, 0); }
+    if (p === 'jakt') { renderJakt(); detectLan(); }
+    if (p === 'back') updateBack(true);
+    if (p === 'vind' && !$('mapView').hidden) setTimeout(() => { if (map) { map.invalidateSize(); updateMap(); } }, 0);
+    if (p !== 'back') releaseWake();
+    syncWatch();
     openMenu(false);
     try { localStorage.setItem(KEY + '.page', p); } catch (e) {}
   }
@@ -677,6 +769,123 @@ nav svg { width: 24px; height: 24px; }
   $('scrim').addEventListener('click', () => openMenu(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('drawer').hidden) openMenu(false); });
   document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => showPage(b.dataset.page)));
+
+  // ---------- Hitta tillbaka ----------
+  const rad = (d) => (d * Math.PI) / 180;
+  function distBearing(a, b) {
+    const f1 = rad(a.lat), f2 = rad(b.lat), dl = rad(b.lon - a.lon), df = f2 - f1;
+    const h = Math.sin(df / 2) ** 2 + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) ** 2;
+    const d = 2 * 6371000 * Math.asin(Math.sqrt(h));
+    const y = Math.sin(dl) * Math.cos(f2);
+    const x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl);
+    return { d, b: norm((Math.atan2(y, x) * 180) / Math.PI) };
+  }
+  const fmtDist = (m) => (m < 1000 ? `${Math.round(m / 5) * 5} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', ',')} km`);
+  const hhmm = (t) => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const wakeSupported = 'wakeLock' in navigator;
+  let wakeLock = null;
+  let lastBackText = 0;
+
+  function updateBack(force) {
+    if (page !== 'back') return;
+    const has = !!start;
+    $('backEmpty').hidden = has; $('backNav').hidden = !has;
+    $('showStartMap').hidden = !has; $('clearStart').hidden = !has; $('wakeRow').hidden = !has || !wakeSupported;
+    if (!moveArmed) $('setStart').textContent = has ? 'Flytta startpunkten hit' : 'Sätt startpunkt här';
+    $('setStart').classList.toggle('primary', !has);
+    if (force && has && $('wakeChk').checked && !wakeLock) requestWake();
+    if (!has) { $('backMeta').innerHTML = '&nbsp;'; return; }
+    $('backMeta').innerHTML = `Satt ${hhmm(start.at)}<br>±${Math.round(start.acc || 0)} m`;
+    if (!pos) { $('backDist').textContent = 'Söker position…'; $('backDir').innerHTML = '&nbsp;'; $('backHint').innerHTML = '&nbsp;'; return; }
+    const { d, b } = distBearing(pos, start);
+    $('backArrow').setAttribute('transform', `rotate(${heading == null ? b : norm(b - shown)} 150 150)`);
+    const now = Date.now();
+    if (!force && now - lastBackText < 300) return;
+    lastBackText = now;
+    const radius = Math.max(15, pos.acc || 0);
+    const near = d <= radius;
+    if (near) {
+      $('backDist').textContent = 'Du är framme';
+      $('backDir').textContent = `Inom ${Math.round(radius)} m från startpunkten`;
+    } else {
+      $('backDist').textContent = fmtDist(d);
+      $('backDir').textContent = `Startpunkten ligger åt ${dirName(b)} (${Math.round(b)}°)`;
+    }
+    $('backHint').textContent = heading == null
+      ? 'Pilen visar riktningen med norr uppåt. Aktivera kompassen så följer den telefonen.'
+      : (near ? ' ' : (pos.acc > 30 ? `Svag GPS just nu, ±${Math.round(pos.acc)} m` : 'Gå dit pilen pekar'));
+    $('backDial').setAttribute('aria-label', near ? 'Du är framme vid startpunkten' : `Startpunkten ligger ${fmtDist(d)} åt ${dirName(b)}`);
+  }
+
+  function saveStart(p) {
+    start = { lat: p.lat, lon: p.lon, acc: p.acc, at: Date.now() };
+    try { localStorage.setItem(KEY + '.start', JSON.stringify(start)); } catch (e) {}
+    $('backMsg').textContent = `Startpunkten är satt, ±${Math.round(p.acc || 0)} m.`;
+    updateMap(); updateBack(true);
+  }
+
+  let moveArmed = null;
+  $('setStart').addEventListener('click', () => {
+    const btn = $('setStart');
+    $('backMsg').textContent = '';
+    // Skydd mot att råka skriva över startpunkten ute i skogen
+    if (start && !moveArmed) {
+      btn.textContent = 'Tryck igen för att flytta startpunkten hit';
+      moveArmed = setTimeout(() => { moveArmed = null; updateBack(true); }, 4000);
+      return;
+    }
+    if (moveArmed) { clearTimeout(moveArmed); moveArmed = null; }
+    if (DEMO) { if (pos) saveStart(pos); return; }
+    if (!navigator.geolocation) { $('backMsg').textContent = 'Telefonen kan inte ge någon position.'; return; }
+    btn.disabled = true; btn.textContent = 'Hämtar exakt position…';
+    navigator.geolocation.getCurrentPosition((p) => {
+      btn.disabled = false;
+      pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
+      saveStart(pos);
+    }, () => {
+      btn.disabled = false; updateBack(true);
+      $('backMsg').textContent = 'Fick ingen position. Tillåt platstjänster för appen och försök igen under öppen himmel.';
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  });
+
+  let clearArmed = null;
+  $('clearStart').addEventListener('click', () => {
+    const btn = $('clearStart');
+    if (!clearArmed) {
+      btn.textContent = 'Tryck igen för att ta bort';
+      clearArmed = setTimeout(() => { clearArmed = null; btn.textContent = 'Ta bort startpunkten'; }, 4000);
+      return;
+    }
+    clearTimeout(clearArmed); clearArmed = null; btn.textContent = 'Ta bort startpunkten';
+    start = null;
+    try { localStorage.removeItem(KEY + '.start'); } catch (e) {}
+    releaseWake(); $('wakeChk').checked = false;
+    $('backMsg').textContent = 'Startpunkten är borttagen.';
+    updateMap(); updateBack(true);
+  });
+
+  $('showStartMap').addEventListener('click', () => {
+    showPage('vind'); setView('map');
+    setTimeout(() => {
+      if (!map || !start) return;
+      follow = false;
+      if (pos) map.fitBounds([[pos.lat, pos.lon], [start.lat, start.lon]], { padding: [50, 50], maxZoom: 17 });
+      else map.setView([start.lat, start.lon], 16);
+    }, 50);
+  });
+
+  async function requestWake() {
+    if (!wakeSupported) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) { $('wakeChk').checked = false; }
+  }
+  function releaseWake() { if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; } }
+  $('wakeChk').addEventListener('change', (e) => { if (e.target.checked) requestWake(); else releaseWake(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && page === 'back' && $('wakeChk').checked && !wakeLock) requestWake();
+  });
 
   // ---------- Jakttider ----------
   const J = window.JAKT;
@@ -832,7 +1041,7 @@ nav svg { width: 24px; height: 24px; }
   setView(startView);
   let startPage = 'vind';
   try { startPage = localStorage.getItem(KEY + '.page') || 'vind'; } catch (e) {}
-  if (startPage === 'jakt') showPage('jakt');
+  if (startPage === 'jakt' || startPage === 'back') showPage(startPage);
   refresh();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

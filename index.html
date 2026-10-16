@@ -120,8 +120,8 @@ nav svg { width: 24px; height: 24px; }
         <g id="ticks"></g>
         <g id="wind" transform="rotate(0 150 150)" opacity="0">
           <path d="M150 150 L192.75 267.5 A125 125 0 0 1 107.25 267.5 Z" fill="#D9A441" fill-opacity="0.22" stroke="#D9A441" stroke-opacity="0.6" stroke-width="1.5"/>
-          <line x1="150" y1="28" x2="150" y2="126" stroke="#D9A441" stroke-width="6" stroke-linecap="round"/>
-          <polygon points="150,142 141,122 159,122" fill="#D9A441"/>
+          <line x1="150" y1="24" x2="150" y2="92" stroke="#D9A441" stroke-width="6" stroke-linecap="round"/>
+          <polygon points="150,108 141,88 159,88" fill="#D9A441"/>
         </g>
         <text x="150" y="32" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="20" fill="#E8EDE4">N</text>
         <text x="278" y="157" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="600" font-size="16" fill="#9DB0A2">Ö</text>
@@ -129,7 +129,24 @@ nav svg { width: 24px; height: 24px; }
         <text x="22" y="157" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="600" font-size="16" fill="#9DB0A2">V</text>
       </g>
       <path d="M150 4 l-7 12 h14 z" fill="#E8EDE4" aria-hidden="true"/>
-      <circle cx="150" cy="150" r="7" fill="#E8EDE4"/>
+      <defs>
+        <radialGradient id="beam" cx="150" cy="150" r="78" gradientUnits="userSpaceOnUse">
+          <stop offset="0.15" stop-color="#E8EDE4" stop-opacity="0.38"/>
+          <stop offset="1" stop-color="#E8EDE4" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- Jägaren uppifrån, alltid vänd uppåt = dit telefonen pekar -->
+      <g id="hunter" aria-hidden="true" transform="translate(150 150) scale(1.35) translate(-150 -150)">
+        <path d="M150 150 L117 79.2 A78 78 0 0 1 183 79.2 Z" fill="url(#beam)"/>
+        <ellipse cx="151.5" cy="155" rx="23" ry="12" fill="#000000" fill-opacity="0.3"/>
+        <ellipse cx="129.5" cy="146" rx="5.5" ry="9" fill="#4E5D41" stroke="#E8EDE4" stroke-width="1.5"/>
+        <ellipse cx="170.5" cy="146" rx="5.5" ry="9" fill="#4E5D41" stroke="#E8EDE4" stroke-width="1.5"/>
+        <rect x="128" y="141" width="44" height="20" rx="10" fill="#5B6B4E" stroke="#E8EDE4" stroke-width="1.5"/>
+        <line x1="161" y1="164" x2="168" y2="128" stroke="#2A2118" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="150" cy="139.5" rx="7" ry="4.5" fill="#B5531F" stroke="#E8EDE4" stroke-width="1.5"/>
+        <circle cx="150" cy="148" r="9.5" fill="#E07A3F" stroke="#E8EDE4" stroke-width="1.5"/>
+        <circle cx="150" cy="148" r="3" fill="#B5531F"/>
+      </g>
     </svg>
     <button class="compass-btn" id="compassBtn" type="button" hidden>Aktivera kompass</button>
   </div>

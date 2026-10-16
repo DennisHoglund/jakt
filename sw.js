@@ -1,5 +1,5 @@
 // Jaktvind service worker: appen fungerar offline, prognosen sparas i appen själv.
-const CACHE = 'jaktvind-v2';
+const CACHE = 'jaktvind-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

@@ -157,12 +157,29 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
   color: var(--fg); font-weight: 600; font-size: 16px; padding: 0 16px;
 }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #1B1406; }
+.btn.ghost { background: none; border-color: transparent; color: var(--muted); font-weight: 500; }
 .btn.danger { background: none; color: #FF8A73; border-color: #45201A; }
 .toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
 .toggle input { width: 22px; height: 22px; accent-color: var(--accent); }
 .back-note { margin: 0; font-size: 13px; color: var(--muted); }
-.track-info { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
-.track-info i { width: 18px; height: 4px; border-radius: 2px; background: #E5484D; }
+.map-el { position: absolute; inset: 0; background: var(--panel); }
+.map-legend em.flag { width: 12px; height: 10px; background: #E07A3F; clip-path: polygon(0 0, 100% 0, 75% 50%, 100% 100%, 0 100%); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.steps li { font-size: 13px; text-align: center; padding: 8px 4px; border-radius: 9px; background: var(--panel); color: var(--muted); }
+.steps li.on { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.steps li.done { color: var(--fg); }
+.trip-step { display: flex; flex-direction: column; gap: 14px; }
+.lead { margin: 0; font-size: 16px; color: var(--muted); max-width: 42ch; }
+.lead b { color: var(--fg); }
+.btn.big { min-height: 60px; font-size: 19px; }
+.live { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.rec-dot { width: 12px; height: 12px; border-radius: 50%; background: #E5484D; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .rec-dot { animation: none; } }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stats > div { background: var(--panel); border-radius: 12px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-v { font-family: var(--display); font-weight: 700; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat-l { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .start-icon { background: none; border: 0; }
 
 .klass-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
@@ -358,45 +375,81 @@ nav svg { width: 24px; height: 24px; }
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
       <div>
-        <div class="eyebrow">Startpunkt</div>
+        <div class="eyebrow" id="tripEyebrow">Vandring</div>
         <h1 id="backTitle">Hitta tillbaka</h1>
       </div>
     </div>
     <div class="meta" id="backMeta">&nbsp;</div>
   </header>
 
-  <div class="back-empty" id="backEmpty">
-    <p>Sätt en startpunkt där du börjar vandringen eller jakten. Sedan visar en pil vägen tillbaka, även utan täckning.</p>
+  <ol class="steps" aria-label="Steg">
+    <li id="step1">1 Starta</li>
+    <li id="step2">2 Avsluta</li>
+    <li id="step3">3 Hitta hem</li>
+  </ol>
+
+  <!-- Steg 1: ingen vandring -->
+  <div class="trip-step" id="tripIdle">
+    <p class="lead">Tryck på <b>Starta vandring</b> när du går ut i skogen. Appen sparar startpunkten och ritar ditt spår i rött.</p>
+    <p class="lead">När du vill hem trycker du <b>Avsluta vandring</b>. Då visar appen vägen tillbaka med kompass eller karta.</p>
+    <button class="btn primary big" type="button" id="btnStart">Starta vandring</button>
   </div>
 
-  <div class="back-nav" id="backNav" hidden>
-    <svg class="back-dial" viewBox="0 0 300 300" role="img" id="backDial" aria-label="Riktning till startpunkten">
-      <circle cx="150" cy="150" r="138" fill="#1A2B22" stroke="#2E4436" stroke-width="2"/>
-      <circle cx="150" cy="150" r="90" fill="none" stroke="#2E4436" stroke-width="1" stroke-dasharray="3 6"/>
-      <path d="M150 4 l-7 12 h14 z" fill="#E8EDE4"/>
-      <g id="backArrow" transform="rotate(0 150 150)">
-        <path d="M150 34 L196 112 H166 V236 H134 V112 H104 Z" fill="#E07A3F" stroke="#FFF" stroke-width="3" stroke-linejoin="round"/>
-      </g>
-    </svg>
+  <!-- Steg 2: vandring pågår -->
+  <div class="trip-step" id="tripActive" hidden>
+    <div class="live"><span class="rec-dot" aria-hidden="true"></span>Vandring pågår, spåret spelas in</div>
+    <div class="stats">
+      <div><span class="stat-v" id="stTime">0:00</span><span class="stat-l">Tid</span></div>
+      <div><span class="stat-v" id="stWalked">0 m</span><span class="stat-l">Gått</span></div>
+      <div><span class="stat-v" id="stAway">–</span><span class="stat-l">Från start</span></div>
+    </div>
+    <button class="btn primary big" type="button" id="btnEnd">Avsluta vandring</button>
+    <button class="btn danger" type="button" id="btnCancel">Avbryt och radera vandringen</button>
+  </div>
+
+  <!-- Steg 3: hitta tillbaka -->
+  <div class="trip-step" id="tripReturn" hidden>
+    <div class="seg" role="tablist" aria-label="Visa vägen hem med">
+      <button type="button" role="tab" id="retCompass" aria-selected="true">Kompass</button>
+      <button type="button" role="tab" id="retMap" aria-selected="false">Karta</button>
+    </div>
+
+    <div class="back-nav" id="retCompassView">
+      <svg class="back-dial" viewBox="0 0 300 300" role="img" id="backDial" aria-label="Riktning till startpunkten">
+        <circle cx="150" cy="150" r="138" fill="#1A2B22" stroke="#2E4436" stroke-width="2"/>
+        <circle cx="150" cy="150" r="90" fill="none" stroke="#2E4436" stroke-width="1" stroke-dasharray="3 6"/>
+        <path d="M150 4 l-7 12 h14 z" fill="#E8EDE4"/>
+        <g id="backArrow" transform="rotate(0 150 150)">
+          <path d="M150 34 L196 112 H166 V236 H134 V112 H104 Z" fill="#E07A3F" stroke="#FFF" stroke-width="3" stroke-linejoin="round"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="mapview" id="retMapView" hidden>
+      <div id="backMap" class="map-el"></div>
+      <div class="map-legend">
+        <div><b></b>Ditt spår, följ det hem</div>
+        <div><em class="flag" aria-hidden="true"></em>Startpunkt</div>
+      </div>
+      <button class="center-btn" id="backCenter" type="button" aria-label="Centrera kartan på mig">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      </button>
+    </div>
+
     <div class="reading">
       <div class="big" id="backDist">–</div>
       <div class="sub" id="backDir">&nbsp;</div>
       <div class="rel" id="backHint">&nbsp;</div>
-      <div class="track-info"><i aria-hidden="true"></i><span id="trackInfo"></span></div>
     </div>
+
+    <button class="btn" type="button" id="btnHome">Jag är tillbaka, avsluta</button>
+    <button class="btn ghost" type="button" id="btnResume">Fortsätt vandringen</button>
   </div>
 
   <button class="compass-btn" data-compass type="button" hidden>Aktivera kompass</button>
-
-  <div class="back-actions">
-    <button class="btn primary" type="button" id="setStart">Sätt startpunkt här</button>
-    <button class="btn" type="button" id="showStartMap" hidden>Visa spåret på kartan</button>
-    <label class="toggle" id="wakeRow" hidden><input type="checkbox" id="wakeChk"> Håll skärmen tänd</label>
-    <button class="btn danger" type="button" id="clearStart" hidden>Ta bort startpunkten</button>
-    <p class="lan-hint" id="backMsg" role="status" aria-live="polite"></p>
-  </div>
-
-  <p class="back-note">Spåret spelas bara in medan appen är öppen och skärmen är tänd. Låser du telefonen blir det ett avbrott i linjen. Slå på "Håll skärmen tänd" för ett obrutet spår.</p>
+  <label class="toggle" id="wakeRow" hidden><input type="checkbox" id="wakeChk"> Håll skärmen tänd</label>
+  <p class="lan-hint" id="backMsg" role="status" aria-live="polite"></p>
+  <p class="back-note" id="backNote" hidden>Spåret spelas bara in medan appen är öppen och skärmen är tänd. Låser du telefonen blir det ett avbrott i linjen. Slå på "Håll skärmen tänd" för ett obrutet spår.</p>
 </section>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -640,8 +693,12 @@ nav svg { width: 24px; height: 24px; }
     <circle cx="150" cy="148" r="3" fill="#B5531F"/></svg></div>`;
   let map = null, marker = null, accCircle = null, cone = null, watchId = null, follow = true;
   let startMarker = null, startLine = null;
-  let start = null;
-  try { start = JSON.parse(localStorage.getItem(KEY + '.start')); } catch (e) {}
+  let bmap = null, bMarker = null, bAcc = null, bStart = null, bTrack = null, bFollow = true;
+  // Vandring: state 'active' (spåret spelas in) eller 'return' (på väg hem)
+  let trip = null;
+  try { trip = JSON.parse(localStorage.getItem(KEY + '.trip')); } catch (e) {}
+  if (!trip) { try { const s0 = JSON.parse(localStorage.getItem(KEY + '.start')); if (s0) trip = { state: 'active', start: s0 }; } catch (e) {} }
+  let start = trip ? trip.start : null;
   // Startpunkt: flagga på en pinne, spetsen markerar platsen
   const PIN_SVG = `<svg viewBox="0 0 40 48" width="40" height="48" aria-hidden="true">
     <ellipse cx="13" cy="45" rx="7" ry="2.5" fill="#000" fill-opacity="0.35"/>
@@ -652,15 +709,7 @@ nav svg { width: 24px; height: 24px; }
   function initMap() {
     if (typeof L === 'undefined') { $('mapMsg').textContent = 'Kartan kunde inte laddas. Öppna appen med täckning en gång så sparas den.'; return false; }
     map = L.map('map', { zoomControl: false, maxZoom: 20 });
-    const layers = {
-      'Stigar': L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 20, maxZoom: 20, attribution: '© OpenStreetMap · CyclOSM' }),
-      'Terräng': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 20, attribution: '© OpenStreetMap · SRTM · OpenTopoMap' }),
-      'Satellit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'Esri, Maxar, Earthstar Geographics' }),
-      'Karta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 20, attribution: '© OpenStreetMap' })
-    };
-    const overlays = {
-      'Vandringsleder': L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 20, opacity: 0.8, attribution: 'Waymarked Trails' })
-    };
+    const { layers, overlays } = makeLayers();
     let chosen = 'Stigar';
     try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
     (layers[chosen] || layers['Stigar']).addTo(map);
@@ -671,6 +720,19 @@ nav svg { width: 24px; height: 24px; }
     map.on('dragstart', () => { follow = false; });
     if (pos) map.setView([pos.lat, pos.lon], 16); else map.setView([62.5, 16], 5);
     return true;
+  }
+
+  function makeLayers() {
+    const layers = {
+      'Stigar': L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 20, maxZoom: 20, attribution: '© OpenStreetMap · CyclOSM' }),
+      'Terräng': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 20, attribution: '© OpenStreetMap · SRTM · OpenTopoMap' }),
+      'Satellit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'Esri, Maxar, Earthstar Geographics' }),
+      'Karta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 20, attribution: '© OpenStreetMap' })
+    };
+    const overlays = {
+      'Vandringsleder': L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 20, opacity: 0.8, attribution: 'Waymarked Trails' })
+    };
+    return { layers, overlays };
   }
 
   function conePoints(lat, lon, bearing, spread, dist) {
@@ -684,9 +746,11 @@ nav svg { width: 24px; height: 24px; }
   }
 
   function rotateHunter() {
-    const el = marker && marker.getElement();
-    const inner = el && el.querySelector('.hunter-rot');
-    if (inner) inner.style.transform = `rotate(${heading == null ? 0 : shown}deg)`;
+    [marker, bMarker].forEach((m) => {
+      const el = m && m.getElement();
+      const inner = el && el.querySelector('.hunter-rot');
+      if (inner) inner.style.transform = `rotate(${heading == null ? 0 : shown}deg)`;
+    });
   }
 
   function updateMap() {
@@ -737,7 +801,7 @@ nav svg { width: 24px; height: 24px; }
     return m;
   }
   function recordPoint(p, ts) {
-    if (!start || !p || (p.acc || 999) > TRACK_MAX_ACC) return;
+    if (!trip || trip.state !== 'active' || !p || (p.acc || 999) > TRACK_MAX_ACC) return;
     let seg = track[track.length - 1];
     if (!seg || ts - lastTrackTs > TRACK_GAP_MS) { seg = []; track.push(seg); }
     const last = seg[seg.length - 1];
@@ -773,7 +837,7 @@ nav svg { width: 24px; height: 24px; }
   }
   // GPS behövs när kartan eller hitta tillbaka-sidan är synlig, och hela tiden medan ett spår spelas in
   function syncWatch() {
-    const need = (page === 'vind' && !$('mapView').hidden) || page === 'back' || !!start;
+    const need = (page === 'vind' && !$('mapView').hidden) || page === 'back' || (trip && trip.state === 'active');
     if (need) startWatch(); else stopWatch();
   }
 
@@ -810,7 +874,7 @@ nav svg { width: 24px; height: 24px; }
       if (b.dataset.page === p) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     if (p === 'jakt') { renderJakt(); detectLan(); }
-    if (p === 'back') updateBack(true);
+    if (p === 'back') { updateBack(true); if (trip && trip.state === 'return') setRetView(retView); }
     if (p === 'vind' && !$('mapView').hidden) setTimeout(() => { if (map) { map.invalidateSize(); updateMap(); } }, 0);
     if (p !== 'back') releaseWake();
     syncWatch();
@@ -834,22 +898,63 @@ nav svg { width: 24px; height: 24px; }
   }
   const fmtDist = (m) => (m < 1000 ? `${Math.round(m / 5) * 5} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', ',')} km`);
   const hhmm = (t) => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const fmtDur = (ms) => { const m = Math.floor(ms / 60000); return `${Math.floor(m / 60)}:${pad(m % 60)}`; };
   const wakeSupported = 'wakeLock' in navigator;
   let wakeLock = null;
   let lastBackText = 0;
+  let retView = 'compass';
+  try { retView = localStorage.getItem(KEY + '.retView') || 'compass'; } catch (e) {}
+
+  function saveTrip() {
+    try {
+      if (trip) localStorage.setItem(KEY + '.trip', JSON.stringify(trip)); else localStorage.removeItem(KEY + '.trip');
+      localStorage.removeItem(KEY + '.start');
+    } catch (e) {}
+    start = trip ? trip.start : null;
+  }
+
+  // Två tryck för åtgärder som inte går att ångra
+  const armed = {};
+  function confirmTap(btn, label, confirmLabel, action) {
+    if (!armed[btn.id]) {
+      btn.textContent = confirmLabel;
+      armed[btn.id] = setTimeout(() => { armed[btn.id] = null; btn.textContent = label; }, 4000);
+      return;
+    }
+    clearTimeout(armed[btn.id]); armed[btn.id] = null; btn.textContent = label;
+    action();
+  }
 
   function updateBack(force) {
     if (page !== 'back') return;
-    const has = !!start;
-    $('backEmpty').hidden = has; $('backNav').hidden = !has;
-    $('showStartMap').hidden = !has; $('clearStart').hidden = !has; $('wakeRow').hidden = !has || !wakeSupported;
-    if (!moveArmed) $('setStart').textContent = has ? 'Flytta startpunkten hit' : 'Sätt startpunkt här';
-    $('setStart').classList.toggle('primary', !has);
-    if (force && has && $('wakeChk').checked && !wakeLock) requestWake();
-    if (!has) { $('backMeta').innerHTML = '&nbsp;'; return; }
-    $('backMeta').innerHTML = `Satt ${hhmm(start.at)}<br>±${Math.round(start.acc || 0)} m`;
+    const st = trip ? trip.state : 'idle';
+    $('tripIdle').hidden = st !== 'idle';
+    $('tripActive').hidden = st !== 'active';
+    $('tripReturn').hidden = st !== 'return';
+    $('wakeRow').hidden = st === 'idle' || !wakeSupported;
+    $('backNote').hidden = st !== 'active';
+    $('step1').className = st === 'idle' ? 'on' : 'done';
+    $('step2').className = st === 'active' ? 'on' : (st === 'return' ? 'done' : '');
+    $('step3').className = st === 'return' ? 'on' : '';
+    $('tripEyebrow').textContent = st === 'active' ? 'Vandring pågår' : (st === 'return' ? 'På väg hem' : 'Vandring');
+    if (force && st !== 'idle' && $('wakeChk').checked && !wakeLock) requestWake();
+    $('backMeta').innerHTML = start ? `Start ${hhmm(start.at)}<br>±${Math.round(start.acc || 0)} m` : '&nbsp;';
+    if (st === 'idle') return;
+
+    const away = pos ? distBearing(pos, start) : null;
+    if (st === 'active') {
+      const now = Date.now();
+      if (!force && now - lastBackText < 500) return;
+      lastBackText = now;
+      $('stTime').textContent = fmtDur(now - start.at);
+      $('stWalked').textContent = fmtDist(trackLength());
+      $('stAway').textContent = away ? fmtDist(away.d) : '–';
+      return;
+    }
+
+    // st === 'return'
     if (!pos) { $('backDist').textContent = 'Söker position…'; $('backDir').innerHTML = '&nbsp;'; $('backHint').innerHTML = '&nbsp;'; return; }
-    const { d, b } = distBearing(pos, start);
+    const { d, b } = away;
     $('backArrow').setAttribute('transform', `rotate(${heading == null ? b : norm(b - shown)} 150 150)`);
     const now = Date.now();
     if (!force && now - lastBackText < 300) return;
@@ -861,46 +966,41 @@ nav svg { width: 24px; height: 24px; }
       $('backDir').textContent = `Inom ${Math.round(radius)} m från startpunkten`;
     } else {
       $('backDist').textContent = fmtDist(d);
-      $('backDir').textContent = `Startpunkten ligger åt ${dirName(b)} (${Math.round(b)}°)`;
+      $('backDir').textContent = `Startpunkten ligger åt ${dirName(b)} (${Math.round(b)}°), fågelvägen`;
     }
-    $('backHint').textContent = heading == null
-      ? 'Pilen visar riktningen med norr uppåt. Aktivera kompassen så följer den telefonen.'
-      : (near ? ' ' : (pos.acc > 30 ? `Svag GPS just nu, ±${Math.round(pos.acc)} m` : 'Gå dit pilen pekar'));
+    $('backHint').textContent = near ? ' '
+      : (retView === 'map' ? 'Följ den röda linjen tillbaka till flaggan.'
+      : (heading == null ? 'Pilen visar riktningen med norr uppåt. Aktivera kompassen så följer den telefonen.'
+      : (pos.acc > 30 ? `Svag GPS just nu, ±${Math.round(pos.acc)} m` : 'Gå dit pilen pekar.')));
+    $('btnHome').classList.toggle('primary', near);
     $('backDial').setAttribute('aria-label', near ? 'Du är framme vid startpunkten' : `Startpunkten ligger ${fmtDist(d)} åt ${dirName(b)}`);
-    const len = trackLength();
-    $('trackInfo').textContent = len > 0 ? `Spår inspelat: ${fmtDist(len)}${track.length > 1 ? ` (${track.length - 1} avbrott)` : ''}` : 'Spåret börjar spelas in när du går.';
+    updateBackMap();
   }
 
-  function saveStart(p) {
-    start = { lat: p.lat, lon: p.lon, acc: p.acc, at: Date.now() };
-    try { localStorage.setItem(KEY + '.start', JSON.stringify(start)); } catch (e) {}
-    // Nytt spår som börjar i startpunkten
+  // Ticka tiden även när GPS står still
+  setInterval(() => { if (page === 'back' && trip && trip.state === 'active') updateBack(true); }, 15000);
+
+  function beginTrip(p) {
+    trip = { state: 'active', start: { lat: p.lat, lon: p.lon, acc: p.acc, at: Date.now() } };
+    saveTrip();
     track = [[[+p.lat.toFixed(6), +p.lon.toFixed(6)]]]; lastTrackTs = Date.now(); saveTrack();
-    $('backMsg').textContent = `Startpunkten är satt, ±${Math.round(p.acc || 0)} m. Spåret spelas in medan appen är öppen.`;
+    $('backMsg').textContent = `Startpunkten är sparad, ±${Math.round(p.acc || 0)} m. Trevlig tur!`;
     syncWatch(); updateMap(); updateBack(true);
   }
 
-  let moveArmed = null;
-  $('setStart').addEventListener('click', () => {
-    const btn = $('setStart');
+  $('btnStart').addEventListener('click', () => {
+    const btn = $('btnStart');
     $('backMsg').textContent = '';
-    // Skydd mot att råka skriva över startpunkten ute i skogen
-    if (start && !moveArmed) {
-      btn.textContent = 'Tryck igen för att flytta startpunkten hit';
-      moveArmed = setTimeout(() => { moveArmed = null; updateBack(true); }, 4000);
-      return;
-    }
-    if (moveArmed) { clearTimeout(moveArmed); moveArmed = null; }
-    if (DEMO) { if (pos) saveStart(pos); return; }
+    if (DEMO) { if (pos) beginTrip(pos); return; }
     if (!navigator.geolocation) { $('backMsg').textContent = 'Telefonen kan inte ge någon position.'; return; }
     // En färsk och bra position från bevakningen räcker
-    if (pos && Date.now() - posTs < 10000 && pos.acc <= 30) { saveStart(pos); return; }
+    if (pos && Date.now() - posTs < 10000 && pos.acc <= 30) { beginTrip(pos); return; }
     btn.disabled = true; btn.textContent = 'Hämtar exakt position…';
     let done = false;
     const finish = (p) => {
-      if (done) return; done = true; btn.disabled = false;
-      if (p) saveStart(p);
-      else { updateBack(true); $('backMsg').textContent = 'Fick ingen position. Tillåt platstjänster för appen och försök igen under öppen himmel.'; }
+      if (done) return; done = true; btn.disabled = false; btn.textContent = 'Starta vandring';
+      if (p) beginTrip(p);
+      else $('backMsg').textContent = 'Fick ingen position. Tillåt platstjänster för appen och försök igen under öppen himmel.';
     };
     navigator.geolocation.getCurrentPosition((p) => {
       pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }; posTs = Date.now();
@@ -910,33 +1010,86 @@ nav svg { width: 24px; height: 24px; }
     setTimeout(() => { if (!done && pos && Date.now() - posTs < 60000) finish(pos); }, 8000);
   });
 
-  let clearArmed = null;
-  $('clearStart').addEventListener('click', () => {
-    const btn = $('clearStart');
-    if (!clearArmed) {
-      btn.textContent = 'Tryck igen för att ta bort';
-      clearArmed = setTimeout(() => { clearArmed = null; btn.textContent = 'Ta bort startpunkten'; }, 4000);
-      return;
-    }
-    clearTimeout(clearArmed); clearArmed = null; btn.textContent = 'Ta bort startpunkten';
-    start = null;
-    try { localStorage.removeItem(KEY + '.start'); } catch (e) {}
-    releaseWake(); $('wakeChk').checked = false;
-    clearTrack();
-    $('backMsg').textContent = 'Startpunkten och spåret är borttagna.';
-    syncWatch(); updateMap(); updateBack(true);
+  $('btnEnd').addEventListener('click', () => {
+    if (pos) recordPoint(pos, Date.now());
+    trip.state = 'return'; trip.endedAt = Date.now(); saveTrip();
+    $('backMsg').textContent = `Vandringen är avslutad efter ${fmtDist(trackLength())}. Nu visar appen vägen hem.`;
+    syncWatch(); updateBack(true); setRetView(retView);
   });
 
-  $('showStartMap').addEventListener('click', () => {
-    showPage('vind'); setView('map');
-    setTimeout(() => {
-      if (!map || !start) return;
-      follow = false;
-      const pts = [[start.lat, start.lon], ...track.flat()];
-      if (pos) pts.push([pos.lat, pos.lon]);
-      map.fitBounds(pts, { padding: [50, 50], maxZoom: 17 });
-    }, 50);
+  function endAll(msg) {
+    trip = null; saveTrip(); clearTrack();
+    releaseWake(); $('wakeChk').checked = false;
+    $('backMsg').textContent = msg;
+    syncWatch(); updateMap(); updateBack(true);
+  }
+  $('btnResume').addEventListener('click', () => {
+    trip.state = 'active'; delete trip.endedAt; saveTrip();
+    lastTrackTs = 0; // nytt segment, så att det inte blir en rak linje
+    $('backMsg').textContent = 'Vandringen fortsätter. Spåret spelas in igen.';
+    syncWatch(); updateBack(true);
   });
+  $('btnCancel').addEventListener('click', (e) => confirmTap(e.currentTarget, 'Avbryt och radera vandringen', 'Tryck igen för att radera', () => endAll('Vandringen är raderad.')));
+  $('btnHome').addEventListener('click', (e) => confirmTap(e.currentTarget, 'Jag är tillbaka, avsluta', 'Tryck igen för att avsluta och radera spåret', () => endAll('Välkommen tillbaka!')));
+
+  // Hemvägen: kompass eller karta
+  function setRetView(v) {
+    retView = v;
+    try { localStorage.setItem(KEY + '.retView', v); } catch (e) {}
+    $('retCompass').setAttribute('aria-selected', String(v === 'compass'));
+    $('retMap').setAttribute('aria-selected', String(v === 'map'));
+    $('retCompassView').hidden = v !== 'compass';
+    $('retMapView').hidden = v !== 'map';
+    if (v === 'map') {
+      if (!bmap && !initBackMap()) return;
+      setTimeout(() => { bmap.invalidateSize(); fitBackMap(); }, 0);
+    }
+    updateBack(true);
+  }
+  $('retCompass').addEventListener('click', () => setRetView('compass'));
+  $('retMap').addEventListener('click', () => setRetView('map'));
+
+  function initBackMap() {
+    if (typeof L === 'undefined') { $('backHint').textContent = 'Kartan kunde inte laddas. Använd kompassen.'; return false; }
+    bmap = L.map('backMap', { zoomControl: false, maxZoom: 20 });
+    const { layers, overlays } = makeLayers();
+    let chosen = 'Stigar';
+    try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
+    (layers[chosen] || layers['Stigar']).addTo(bmap);
+    L.control.layers(layers, overlays, { position: 'topright' }).addTo(bmap);
+    bmap.on('baselayerchange', (e) => { try { localStorage.setItem(KEY + '.layer2', e.name); } catch (_) {} });
+    bmap.on('dragstart', () => { bFollow = false; });
+    bmap.setView(start ? [start.lat, start.lon] : [62.5, 16], start ? 16 : 5);
+    return true;
+  }
+  function fitBackMap() {
+    if (!bmap || !start) return;
+    const pts = [[start.lat, start.lon], ...track.flat()];
+    if (pos) pts.push([pos.lat, pos.lon]);
+    bmap.fitBounds(pts, { padding: [40, 40], maxZoom: 18 });
+    bFollow = false;
+  }
+  function updateBackMap() {
+    if (!bmap || $('retMapView').hidden || !start) return;
+    const sl = [start.lat, start.lon];
+    if (!bStart) bStart = L.marker(sl, { icon: L.divIcon({ className: 'start-icon', html: PIN_SVG, iconSize: [40, 48], iconAnchor: [13, 45] }), keyboard: false, interactive: false }).addTo(bmap);
+    else bStart.setLatLng(sl);
+    const segs = track.filter((s) => s.length > 1);
+    if (segs.length) {
+      if (!bTrack) bTrack = L.polyline(segs, { color: '#E5484D', weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(bmap);
+      else bTrack.setLatLngs(segs);
+    } else if (bTrack) { bmap.removeLayer(bTrack); bTrack = null; }
+    if (pos) {
+      const ll = [pos.lat, pos.lon];
+      if (!bMarker) {
+        bAcc = L.circle(ll, { radius: pos.acc || 30, color: '#FFFFFF', weight: 1, opacity: 0.6, fillOpacity: 0.08, interactive: false }).addTo(bmap);
+        bMarker = L.marker(ll, { icon: L.divIcon({ className: 'hunter-icon', html: HUNTER_SVG, iconSize: [72, 72], iconAnchor: [36, 36] }), interactive: false, keyboard: false }).addTo(bmap);
+      } else { bMarker.setLatLng(ll); bAcc.setLatLng(ll).setRadius(pos.acc || 30); }
+      if (bFollow) bmap.setView(ll, Math.max(bmap.getZoom(), 16), { animate: false });
+    }
+    rotateHunter();
+  }
+  $('backCenter').addEventListener('click', () => { bFollow = true; updateBackMap(); });
 
   async function requestWake() {
     if (!wakeSupported) return;

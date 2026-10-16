@@ -140,6 +140,11 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .row .who { font-weight: 600; }
 .row .sub { font-size: 13px; color: var(--muted); }
 .art-info { font-size: 13px; color: var(--muted); }
+.vapen { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+.chip { display: inline-flex; gap: 6px; align-items: baseline; font-size: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; }
+.chip-l { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.chip.off span:last-child { color: #FF8A73; }
+.klass-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 .empty { color: var(--muted); font-size: 15px; padding: 8px 0; }
 .closed-list { font-size: 14px; color: var(--muted); }
 .jakt-foot { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
@@ -315,6 +320,8 @@ nav svg { width: 24px; height: 24px; }
 
   <footer class="jakt-foot">
     <p>Allmän jakt enligt jaktförordningen (1987:905) bilaga 1, i den lydelse som gäller till och med 30 juni 2027. Älg enligt länsstyrelsernas beslut för 2026. Skyddsjakt, licensjakt och lokala beslut ingår inte.</p>
+    <p>Vapen och ammunition enligt Naturvårdsverkets föreskrifter NFS 2023:8. Högre kulklass än den angivna är alltid tillåten.</p>
+    <ul class="klass-list" id="klassList"></ul>
     <p>För flera arter, bland annat klövvilt och andfåglar, gäller också regler om tid på dygnet. Kontrollera alltid hos länsstyrelsen och Naturvårdsverket innan du jagar.</p>
     <p><a href="https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/jaktforordning-1987905_sfs-1987-905/" target="_blank" rel="noopener">Jaktförordningen hos Riksdagen</a></p>
   </footer>
@@ -771,6 +778,19 @@ nav svg { width: 24px; height: 24px; }
           row.append(mark, body); rs.appendChild(row);
         });
         card.appendChild(rs);
+        if (a.v) {
+          const vb = document.createElement('div'); vb.className = 'vapen';
+          const chip = (label, val, off) => {
+            const c = document.createElement('div'); c.className = 'chip' + (off ? ' off' : '');
+            const l = document.createElement('span'); l.className = 'chip-l'; l.textContent = label;
+            const v = document.createElement('span'); v.textContent = val;
+            c.append(l, v); return c;
+          };
+          vb.appendChild(chip('Kula', a.v.k === 1 ? 'Klass 1' : `Klass ${a.v.k} eller högre`));
+          vb.appendChild(a.v.h ? chip('Hagel', a.v.h) : chip('Hagel', 'Ej tillåtet', true));
+          card.appendChild(vb);
+          if (a.v.note) { const vn = document.createElement('div'); vn.className = 'art-info'; vn.textContent = a.v.note; card.appendChild(vn); }
+        }
         if (a.info) { const inf = document.createElement('div'); inf.className = 'art-info'; inf.textContent = a.info; card.appendChild(inf); }
         sec.appendChild(card);
       });
@@ -792,6 +812,7 @@ nav svg { width: 24px; height: 24px; }
   $('fltOpen').addEventListener('click', () => { filter = 'open'; try { localStorage.setItem(KEY + '.filter', filter); } catch (e) {} renderJakt(); });
   $('fltAll').addEventListener('click', () => { filter = 'all'; try { localStorage.setItem(KEY + '.filter', filter); } catch (e) {} renderJakt(); });
   fillLanSelect();
+  J.KLASS.forEach((t) => { const li = document.createElement('li'); li.textContent = t; $('klassList').appendChild(li); });
 
   $('refreshBtn').addEventListener('click', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });

@@ -175,6 +175,42 @@ window.JAKT = (() => {
     { id: 'notskrika', n: 'Nötskrika', cat: 'Övriga fåglar', r: [{ l: 'ALL', p: [['0821', '0310']] }] }
   ];
 
+  // Vapen och ammunition enligt NFS 2023:8 (i kraft 1 aug 2023).
+  // k = lägsta tillåtna kulklass (högre klass är alltid tillåten), h = hagel.
+  const H_STOR = 'Kaliber 12, 16 eller 20';
+  const H_ALLA = 'Kaliber 12, 16, 20, 24, 28, 32 eller .410';
+  const BLY = 'Blyhagel är förbjudet inom 100 m från våtmark.';
+  const V = (k, h, note) => ({ k, h, note });
+  const VAPEN = {
+    alg: V(1, null), kronhjort: V(1, null),
+    dovhjort: V(1, null, 'Slugpatron i kaliber 12, 16 eller 20 är tillåten om du är behörig för klass 1.'),
+    vildsvin: V(1, null, 'Slugpatron i kaliber 12, 16 eller 20 är tillåten om du är behörig för klass 1.'),
+    radjur: V(2, H_STOR, 'Slugpatron är tillåten om du är behörig för klass 2.'),
+    baver: V(2, null),
+    falthare: V(3, H_STOR), skogshare: V(3, H_STOR),
+    rodrav: V(3, H_STOR, 'Klass 4 räcker under jord, vid gryt eller lya.'),
+    gravling: V(3, H_STOR, 'Klass 4 räcker under jord, vid gryt eller med ställande hund.'),
+    iller: V(4, H_ALLA), skogsmard: V(4, H_ALLA),
+    'tjäder': V(3, H_STOR), orre: V(3, H_STOR),
+    jarpe: V(4, H_ALLA), dalripa: V(4, H_ALLA), 'fjällripa': V(4, H_ALLA),
+    fasan: V(4, H_ALLA), rapphona: V(4, H_ALLA), morkulla: V(4, H_ALLA), ringduva: V(4, H_ALLA),
+    grasand: V(4, H_ALLA, BLY), kricka: V(4, H_ALLA, BLY), 'bläsand': V(4, H_ALLA, BLY),
+    knipa: V(4, H_ALLA, BLY), storskrake: V(4, H_ALLA, BLY), vigg: V(4, H_ALLA, BLY),
+    sjoorre: V(3, H_STOR, BLY),
+    'grågås': V(3, H_STOR, BLY), 'kanadagås': V(3, H_STOR, BLY), blasgas: V(3, H_STOR, BLY),
+    fiskmas: V(4, H_ALLA), gratrut: V(4, H_ALLA),
+    'kråka': V(4, H_ALLA), kaja: V(4, H_ALLA), skata: V(4, H_ALLA), raka: V(4, H_ALLA), notskrika: V(4, H_ALLA)
+  };
+  ARTER.forEach((a) => { a.v = VAPEN[a.id] || null; });
+
+  const KLASS = [
+    'Klass 1: expanderande kula, minst 9 g och 2 700 J, eller 10 g och 2 000 J (blyfri: 7,7 g och 2 000 J) på 100 m.',
+    'Klass 2: expanderande kula, minst 3,2 g och 800 J på 100 m.',
+    'Klass 3: valfri kulkonstruktion, minst 2,5 g och 200 J på 100 m.',
+    'Klass 4: valfri kulkonstruktion, minst 150 J vid mynningen.',
+    'Hagel: högst 3 patroner (2 i magasinet), hagel högst 4,1 mm (US 1), pipa minst 48 cm.'
+  ];
+
   // Rader som gäller för ett län
   function rowsFor(art, lan) {
     const named = {};
@@ -189,5 +225,5 @@ window.JAKT = (() => {
     });
   }
 
-  return { LAN, ARTER, rowsFor, SOURCE_LAW: 'Jaktförordningen (1987:905) bilaga 1, lydelse t.o.m. 30 juni 2027', SOURCE_ALG: 'Länsstyrelsernas beslut om älgjakt 2026' };
+  return { LAN, ARTER, KLASS, rowsFor, SOURCE_LAW: 'Jaktförordningen (1987:905) bilaga 1, lydelse t.o.m. 30 juni 2027', SOURCE_ALG: 'Länsstyrelsernas beslut om älgjakt 2026' };
 })();

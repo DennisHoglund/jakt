@@ -566,17 +566,23 @@ nav svg { width: 24px; height: 24px; }
 
   function initMap() {
     if (typeof L === 'undefined') { $('mapMsg').textContent = 'Kartan kunde inte laddas. Öppna appen med täckning en gång så sparas den.'; return false; }
-    map = L.map('map', { zoomControl: false, maxZoom: 19 });
+    map = L.map('map', { zoomControl: false, maxZoom: 20 });
     const layers = {
-      'Terräng': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 19, attribution: '© OpenStreetMap · SRTM · OpenTopoMap' }),
-      'Satellit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 19, attribution: 'Esri, Maxar, Earthstar Geographics' }),
-      'Karta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' })
+      'Stigar': L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 20, maxZoom: 20, attribution: '© OpenStreetMap · CyclOSM' }),
+      'Terräng': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 20, attribution: '© OpenStreetMap · SRTM · OpenTopoMap' }),
+      'Satellit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 20, attribution: 'Esri, Maxar, Earthstar Geographics' }),
+      'Karta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 20, attribution: '© OpenStreetMap' })
     };
-    let chosen = 'Terräng';
-    try { chosen = localStorage.getItem(KEY + '.layer') || chosen; } catch (e) {}
-    (layers[chosen] || layers['Terräng']).addTo(map);
-    L.control.layers(layers, null, { position: 'topright' }).addTo(map);
-    map.on('baselayerchange', (e) => { try { localStorage.setItem(KEY + '.layer', e.name); } catch (_) {} });
+    const overlays = {
+      'Vandringsleder': L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 20, opacity: 0.8, attribution: 'Waymarked Trails' })
+    };
+    let chosen = 'Stigar';
+    try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
+    (layers[chosen] || layers['Stigar']).addTo(map);
+    try { if (localStorage.getItem(KEY + '.trails') === '1') overlays['Vandringsleder'].addTo(map); } catch (e) {}
+    L.control.layers(layers, overlays, { position: 'topright' }).addTo(map);
+    map.on('baselayerchange', (e) => { try { localStorage.setItem(KEY + '.layer2', e.name); } catch (_) {} });
+    map.on('overlayadd overlayremove', (e) => { try { localStorage.setItem(KEY + '.trails', e.type === 'overlayadd' ? '1' : '0'); } catch (_) {} });
     map.on('dragstart', () => { follow = false; });
     if (pos) map.setView([pos.lat, pos.lon], 16); else map.setView([62.5, 16], 5);
     return true;

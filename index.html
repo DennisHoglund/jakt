@@ -87,6 +87,65 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .hunter-icon { background: none; border: 0; }
 .hunter-rot { width: 72px; height: 72px; transition: transform .15s linear; }
 
+/* Meny */
+.title-row { display: flex; align-items: center; gap: 10px; }
+.menu-btn { width: 44px; height: 44px; margin-left: -10px; border: 0; background: none; color: var(--fg); display: grid; place-items: center; border-radius: 10px; }
+.menu-btn svg { width: 26px; height: 26px; }
+.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .55); z-index: 1000; }
+.drawer {
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 1001; width: min(300px, 82vw);
+  background: var(--panel); border-right: 1px solid var(--line);
+  padding-top: max(24px, env(safe-area-inset-top, 0px)); padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: 12px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.drawer-head { font-family: var(--display); font-weight: 700; font-size: 26px; padding: 0 12px 16px; }
+.drawer-item {
+  display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 12px; border: 0; border-radius: 10px;
+  background: none; color: var(--fg); font-size: 17px; text-align: left;
+}
+.drawer-item svg { width: 24px; height: 24px; color: var(--muted); }
+.drawer-item[aria-current="page"] { background: var(--line); }
+.drawer-item[aria-current="page"] svg { color: var(--accent); }
+
+/* Jakttider */
+.page {
+  flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+  padding-top: max(20px, env(safe-area-inset-top, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  padding-bottom: 16px;
+  -webkit-user-select: text; user-select: text;
+}
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field select {
+  font: inherit; font-size: 17px; color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; min-height: 48px; padding: 0 12px; -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239DB0A2' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.lan-hint { font-size: 13px; color: var(--muted); min-height: 1em; }
+.cat { display: flex; flex-direction: column; gap: 8px; }
+.cat h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 8px 0 0; }
+.art { background: var(--panel); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.art-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.art-name { font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1; }
+.pill { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.open { background: #1F3A24; color: #8FD07A; }
+.pill.soon { background: var(--line); color: var(--fg); }
+.rows { display: flex; flex-direction: column; gap: 6px; }
+.row { font-size: 15px; display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 8px; }
+.row .mark { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; background: var(--line); }
+.row.on .mark { background: #8FD07A; }
+.row .when { font-variant-numeric: tabular-nums; }
+.row .who { font-weight: 600; }
+.row .sub { font-size: 13px; color: var(--muted); }
+.art-info { font-size: 13px; color: var(--muted); }
+.empty { color: var(--muted); font-size: 15px; padding: 8px 0; }
+.closed-list { font-size: 14px; color: var(--muted); }
+.jakt-foot { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
+.jakt-foot p { margin: 0; max-width: 60ch; }
+.jakt-foot a { color: var(--accent); }
+
 .reading { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .big { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 11vw, 44px); line-height: 1; text-wrap: balance; }
 .sub { font-size: 16px; color: var(--muted); }
@@ -138,9 +197,14 @@ nav svg { width: 24px; height: 24px; }
 <body>
 <main>
   <header class="top">
-    <div>
-      <div class="eyebrow">Din position</div>
-      <h1>Vind</h1>
+    <div class="title-row">
+      <button class="menu-btn" type="button" data-menu aria-label="Öppna menyn" aria-controls="drawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div>
+        <div class="eyebrow">Din position</div>
+        <h1>Vind</h1>
+      </div>
     </div>
     <div class="meta" id="meta">&nbsp;</div>
   </header>
@@ -222,13 +286,59 @@ nav svg { width: 24px; height: 24px; }
   </button>
 </main>
 
+<section class="page" id="pageJakt" hidden aria-labelledby="jaktTitle">
+  <header class="top">
+    <div class="title-row">
+      <button class="menu-btn" type="button" data-menu aria-label="Öppna menyn" aria-controls="drawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div>
+        <div class="eyebrow">Jaktåret 2026/27</div>
+        <h1 id="jaktTitle">Jakttider</h1>
+      </div>
+    </div>
+    <div class="meta" id="jaktDate">&nbsp;</div>
+  </header>
+
+  <div class="field">
+    <label for="lanSel" class="eyebrow">Län</label>
+    <select id="lanSel"></select>
+    <div class="lan-hint" id="lanHint"></div>
+  </div>
+
+  <div class="seg" role="tablist" aria-label="Urval">
+    <button type="button" role="tab" id="fltOpen" aria-selected="true">Jaktbart idag</button>
+    <button type="button" role="tab" id="fltAll" aria-selected="false">Alla arter</button>
+  </div>
+
+  <div id="jaktList"></div>
+
+  <footer class="jakt-foot">
+    <p>Allmän jakt enligt jaktförordningen (1987:905) bilaga 1, i den lydelse som gäller till och med 30 juni 2027. Älg enligt länsstyrelsernas beslut för 2026. Skyddsjakt, licensjakt och lokala beslut ingår inte.</p>
+    <p>För flera arter, bland annat klövvilt och andfåglar, gäller också regler om tid på dygnet. Kontrollera alltid hos länsstyrelsen och Naturvårdsverket innan du jagar.</p>
+    <p><a href="https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/jaktforordning-1987905_sfs-1987-905/" target="_blank" rel="noopener">Jaktförordningen hos Riksdagen</a></p>
+  </footer>
+</section>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Meny" hidden>
+  <div class="drawer-head">Jaktvind</div>
+  <button type="button" class="drawer-item" data-page="vind" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind
+  </button>
+  <button type="button" class="drawer-item" data-page="jakt">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Jakttider
+  </button>
+</aside>
+
 <nav aria-label="Flikar">
-  <button type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind</button>
+  <button type="button" aria-current="page" id="navVind" data-page="vind"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind</button>
   <button type="button" disabled title="Kommer i steg 2"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus</button>
   <button type="button" disabled title="Kommer i steg 3"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Platser</button>
   <button type="button" disabled title="Kommer i steg 4"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
 </nav>
 
+<script src="jakttider.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -314,6 +424,7 @@ nav svg { width: 24px; height: 24px; }
     }
     pos = { lat: c.latitude, lon: c.longitude, acc: c.accuracy };
     updateMap();
+    if (page === 'jakt') detectLan();
     setStatus('Hämtar vind…');
     try { data = await fetchWind(c.latitude, c.longitude); save(data); setStatus(''); }
     catch (e) {
@@ -529,6 +640,159 @@ nav svg { width: 24px; height: 24px; }
   $('segMap').addEventListener('click', () => setView('map'));
   $('centerBtn').addEventListener('click', () => { follow = true; updateMap(); });
 
+  // ---------- Meny och sidor ----------
+  function openMenu(open) {
+    $('drawer').hidden = !open; $('scrim').hidden = !open;
+    document.querySelectorAll('[data-menu]').forEach((b) => b.setAttribute('aria-expanded', String(open)));
+    if (open) { const cur = $('drawer').querySelector('[aria-current="page"]') || $('drawer').querySelector('.drawer-item'); cur.focus(); }
+  }
+  let page = 'vind';
+  function showPage(p) {
+    page = p;
+    document.querySelector('main').hidden = p !== 'vind';
+    $('pageJakt').hidden = p !== 'jakt';
+    document.querySelectorAll('.drawer-item').forEach((b) => {
+      if (b.dataset.page === p) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    if (p === 'vind') $('navVind').setAttribute('aria-current', 'page'); else $('navVind').removeAttribute('aria-current');
+    if (p === 'jakt') { renderJakt(); detectLan(); stopWatch(); }
+    else if (!$('mapView').hidden) { startWatch(); setTimeout(() => { if (map) map.invalidateSize(); }, 0); }
+    openMenu(false);
+    try { localStorage.setItem(KEY + '.page', p); } catch (e) {}
+  }
+  document.querySelectorAll('[data-menu]').forEach((b) => b.addEventListener('click', () => openMenu(true)));
+  $('scrim').addEventListener('click', () => openMenu(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('drawer').hidden) openMenu(false); });
+  document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => showPage(b.dataset.page)));
+
+  // ---------- Jakttider ----------
+  const J = window.JAKT;
+  const MON = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+  const fmt = (mmdd) => mmdd === '0229' ? '28 (29) feb' : `${+mmdd.slice(2)} ${MON[+mmdd.slice(0, 2) - 1]}`;
+  const todayMD = () => { const d = new Date(); return pad(d.getMonth() + 1) + pad(d.getDate()); };
+  const inPeriod = (t, [s, e]) => (s <= e ? t >= s && t <= e : t >= s || t <= e);
+  // Dagar från 1 juli, för att hitta nästa öppning inom jaktåret
+  const seasonDay = (mmdd) => { const m = +mmdd.slice(0, 2), d = +mmdd.slice(2); const base = new Date(2001, m - 1, d); const jul1 = new Date(m >= 7 ? 2001 : 2000, 6, 1); return Math.round((base - jul1) / 864e5) + (m >= 7 ? 0 : 365); };
+
+  let lanAuto = null;     // { k, approx }
+  let lanChoice = 'auto';
+  let filter = 'open';
+  try { lanChoice = localStorage.getItem(KEY + '.lan') || 'auto'; filter = localStorage.getItem(KEY + '.filter') || 'open'; lanAuto = JSON.parse(localStorage.getItem(KEY + '.lanAuto')); } catch (e) {}
+
+  const lanName = (k) => (J.LAN.find((x) => x.k === k) || {}).n || '';
+  const currentLan = () => (lanChoice === 'auto' ? (lanAuto && lanAuto.k) : lanChoice);
+
+  function fillLanSelect() {
+    const sel = $('lanSel');
+    const autoLabel = lanAuto ? `Min position (${lanName(lanAuto.k)})` : 'Min position';
+    sel.innerHTML = '';
+    const o = document.createElement('option'); o.value = 'auto'; o.textContent = autoLabel; sel.appendChild(o);
+    J.LAN.slice().sort((a, b) => a.n.localeCompare(b.n, 'sv')).forEach((l) => {
+      const op = document.createElement('option'); op.value = l.k; op.textContent = l.n; sel.appendChild(op);
+    });
+    sel.value = lanChoice;
+  }
+
+  function nearestLan(lat, lon) {
+    let best = null, bd = Infinity;
+    J.LAN.forEach((l) => { const dy = l.c[0] - lat, dx = (l.c[1] - lon) * Math.cos((lat * Math.PI) / 180); const d = dx * dx + dy * dy; if (d < bd) { bd = d; best = l.k; } });
+    return best;
+  }
+
+  async function detectLan() {
+    if (lanChoice !== 'auto') { $('lanHint').textContent = ''; return; }
+    if (!pos) { $('lanHint').textContent = lanAuto ? 'Senast kända län' : 'Väntar på position…'; return; }
+    if (lanAuto && lanAuto.lat != null && Math.abs(lanAuto.lat - pos.lat) < 0.05 && Math.abs(lanAuto.lon - pos.lon) < 0.1 && !lanAuto.approx) {
+      $('lanHint').textContent = 'Utifrån din position'; return;
+    }
+    $('lanHint').textContent = 'Letar upp län…';
+    let k = null, approx = false;
+    try {
+      const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=5&accept-language=sv&lat=${pos.lat.toFixed(4)}&lon=${pos.lon.toFixed(4)}`, { signal: ctrl.signal });
+      clearTimeout(t);
+      const j = await r.json();
+      const st = ((j.address && (j.address.state || j.address.county)) || '').toLowerCase();
+      const hit = J.LAN.find((l) => st && st.startsWith(l.n.toLowerCase().replace(/s? län$/, '').replace(/ län$/, '')));
+      if (hit) k = hit.k;
+    } catch (e) {}
+    if (!k) { k = nearestLan(pos.lat, pos.lon); approx = true; }
+    lanAuto = { k, approx, lat: pos.lat, lon: pos.lon };
+    try { localStorage.setItem(KEY + '.lanAuto', JSON.stringify(lanAuto)); } catch (e) {}
+    $('lanHint').textContent = approx ? 'Ungefärligt län utan nät, välj själv om det är fel' : 'Utifrån din position';
+    fillLanSelect(); renderJakt();
+  }
+
+  function renderJakt() {
+    const d = new Date();
+    $('jaktDate').innerHTML = `Idag<br>${d.getDate()} ${MON[d.getMonth()]}`;
+    $('fltOpen').setAttribute('aria-selected', String(filter === 'open'));
+    $('fltAll').setAttribute('aria-selected', String(filter === 'all'));
+    const list = $('jaktList'); list.textContent = '';
+    const lan = currentLan();
+    if (!lan) { list.innerHTML = '<p class="empty">Välj ett län för att se jakttiderna.</p>'; return; }
+    const t = todayMD(), tDay = seasonDay(t);
+    const none = [];
+    const cats = {};
+    J.ARTER.forEach((a) => {
+      const rows = J.rowsFor(a, lan);
+      if (!rows.length) { none.push(a.n); return; }
+      const open = rows.some((r) => r.p.some((p) => inPeriod(t, p)));
+      if (filter === 'open' && !open) return;
+      let next = null;
+      if (!open) rows.forEach((r) => r.p.forEach((p) => { const dd = (seasonDay(p[0]) - tDay + 365) % 365; if (next == null || dd < next.dd) next = { dd, s: p[0] }; }));
+      (cats[a.cat] = cats[a.cat] || []).push({ a, rows, open, next });
+    });
+    const order = ['Klövvilt', 'Småvilt', 'Skogsfågel', 'Sjöfågel', 'Övriga fåglar'];
+    let any = false;
+    order.forEach((c) => {
+      if (!cats[c]) return; any = true;
+      const sec = document.createElement('section'); sec.className = 'cat';
+      const h = document.createElement('h2'); h.textContent = c; sec.appendChild(h);
+      cats[c].forEach(({ a, rows, open, next }) => {
+        const card = document.createElement('article'); card.className = 'art';
+        const head = document.createElement('div'); head.className = 'art-head';
+        const nm = document.createElement('div'); nm.className = 'art-name'; nm.textContent = a.n;
+        const pill = document.createElement('span'); pill.className = 'pill ' + (open ? 'open' : 'soon');
+        pill.textContent = open ? 'Öppen idag' : `Öppnar ${fmt(next.s)}`;
+        head.append(nm, pill); card.appendChild(head);
+        const rs = document.createElement('div'); rs.className = 'rows';
+        rows.forEach((r) => {
+          const on = r.p.some((p) => inPeriod(t, p));
+          const row = document.createElement('div'); row.className = 'row' + (on ? ' on' : '');
+          const mark = document.createElement('span'); mark.className = 'mark'; mark.setAttribute('aria-hidden', 'true');
+          const body = document.createElement('div');
+          if (r.who) { const w = document.createElement('div'); w.className = 'who'; w.textContent = r.who; body.appendChild(w); }
+          const when = document.createElement('div'); when.className = 'when';
+          when.textContent = r.p.map(([s, e]) => (s === '0701' && e === '0630' ? 'Hela jaktåret' : `${fmt(s)} – ${fmt(e)}`)).join(' och ');
+          body.appendChild(when);
+          const sub = [r.part, r.note].filter(Boolean).join('. ');
+          if (sub) { const sb = document.createElement('div'); sb.className = 'sub'; sb.textContent = sub; body.appendChild(sb); }
+          row.append(mark, body); rs.appendChild(row);
+        });
+        card.appendChild(rs);
+        if (a.info) { const inf = document.createElement('div'); inf.className = 'art-info'; inf.textContent = a.info; card.appendChild(inf); }
+        sec.appendChild(card);
+      });
+      list.appendChild(sec);
+    });
+    if (!any) list.innerHTML = '<p class="empty">Ingen allmän jakt är öppen idag i det här länet.</p>';
+    if (none.length) {
+      const p = document.createElement('p'); p.className = 'closed-list';
+      p.textContent = `Ingen allmän jakttid i ${lanName(lan)}: ${none.join(', ')}.`;
+      list.appendChild(p);
+    }
+  }
+
+  $('lanSel').addEventListener('change', (e) => {
+    lanChoice = e.target.value;
+    try { localStorage.setItem(KEY + '.lan', lanChoice); } catch (_) {}
+    renderJakt(); detectLan();
+  });
+  $('fltOpen').addEventListener('click', () => { filter = 'open'; try { localStorage.setItem(KEY + '.filter', filter); } catch (e) {} renderJakt(); });
+  $('fltAll').addEventListener('click', () => { filter = 'all'; try { localStorage.setItem(KEY + '.filter', filter); } catch (e) {} renderJakt(); });
+  fillLanSelect();
+
   $('refreshBtn').addEventListener('click', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   setInterval(render, 60 * 1000);
@@ -539,6 +803,9 @@ nav svg { width: 24px; height: 24px; }
   let startView = 'compass';
   try { startView = localStorage.getItem(KEY + '.view') || 'compass'; } catch (e) {}
   setView(startView);
+  let startPage = 'vind';
+  try { startPage = localStorage.getItem(KEY + '.page') || 'vind'; } catch (e) {}
+  if (startPage === 'jakt') showPage('jakt');
   refresh();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

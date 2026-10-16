@@ -204,10 +204,11 @@ window.JAKT = (() => {
   ARTER.forEach((a) => { a.v = VAPEN[a.id] || null; });
 
   const KLASS = [
-    'Klass 1: expanderande kula, minst 9 g och 2 700 J, eller 10 g och 2 000 J (blyfri: 7,7 g och 2 000 J) på 100 m.',
-    'Klass 2: expanderande kula, minst 3,2 g och 800 J på 100 m.',
-    'Klass 3: valfri kulkonstruktion, minst 2,5 g och 200 J på 100 m.',
-    'Klass 4: valfri kulkonstruktion, minst 150 J vid mynningen.',
+    'Klass 1: expanderande kula, minst 9 g och 2 700 J, eller 10 g och 2 000 J (blyfri: 7,7 g och 2 000 J) på 100 m. Exempel: .308 Win, .30-06, 9,3×62, 6,5×55 med tung kula.',
+    'Klass 2: expanderande kula, minst 3,2 g och 800 J på 100 m. Exempel: .222 Rem, .223 Rem, .243 Win.',
+    'Klass 3: valfri kulkonstruktion, minst 2,5 g och 200 J på 100 m. Exempel: .22 Hornet, vissa .22 WMR-laddningar.',
+    'Klass 4: valfri kulkonstruktion, minst 150 J vid mynningen. Exempel: .22 LR (high velocity), .17 HMR, .22 WMR.',
+    'Exemplen är vägledning. Det är den aktuella laddningens kulvikt och energi som avgör klassen, så kontrollera tillverkarens tabell.',
     'Hagel: högst 3 patroner (2 i magasinet), hagel högst 4,1 mm (US 1), pipa minst 48 cm.'
   ];
 

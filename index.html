@@ -31,6 +31,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+main > *, .page > * { flex-shrink: 0; }
 [hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body {
@@ -73,9 +74,11 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .map-legend {
   position: absolute; left: 10px; top: 10px; z-index: 500; pointer-events: none;
   background: rgba(19, 32, 26, .85); color: var(--fg); font-size: 12px; border-radius: 8px; padding: 5px 9px;
-  display: flex; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; gap: 4px;
 }
+.map-legend > div { display: flex; align-items: center; gap: 6px; }
 .map-legend i { width: 12px; height: 12px; border-radius: 3px; background: rgba(217, 164, 65, .45); border: 1px solid var(--accent); }
+.map-legend b { width: 12px; height: 4px; border-radius: 2px; background: #E5484D; }
 .center-btn {
   position: absolute; right: 10px; bottom: 26px; z-index: 500; width: 44px; height: 44px; border-radius: 50%;
   background: var(--bg); border: 1px solid var(--line); color: var(--fg); display: grid; place-items: center;
@@ -158,6 +161,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
 .toggle input { width: 22px; height: 22px; accent-color: var(--accent); }
 .back-note { margin: 0; font-size: 13px; color: var(--muted); }
+.track-info { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.track-info i { width: 18px; height: 4px; border-radius: 2px; background: #E5484D; }
 .start-icon { background: none; border: 0; }
 
 .klass-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
@@ -240,7 +245,10 @@ nav svg { width: 24px; height: 24px; }
   <div class="mapview" id="mapView" hidden>
     <div id="map"></div>
     <div class="map-msg" id="mapMsg"></div>
-    <div class="map-legend"><i></i>Din vittring, ca 400 m</div>
+    <div class="map-legend">
+      <div><i></i>Din vittring, ca 400 m</div>
+      <div id="legendTrack" hidden><b></b>Ditt spår</div>
+    </div>
     <button class="center-btn" id="centerBtn" type="button" aria-label="Centrera kartan på mig">
       <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
     </button>
@@ -374,6 +382,7 @@ nav svg { width: 24px; height: 24px; }
       <div class="big" id="backDist">–</div>
       <div class="sub" id="backDir">&nbsp;</div>
       <div class="rel" id="backHint">&nbsp;</div>
+      <div class="track-info"><i aria-hidden="true"></i><span id="trackInfo"></span></div>
     </div>
   </div>
 
@@ -381,13 +390,13 @@ nav svg { width: 24px; height: 24px; }
 
   <div class="back-actions">
     <button class="btn primary" type="button" id="setStart">Sätt startpunkt här</button>
-    <button class="btn" type="button" id="showStartMap" hidden>Visa på kartan</button>
+    <button class="btn" type="button" id="showStartMap" hidden>Visa spåret på kartan</button>
     <label class="toggle" id="wakeRow" hidden><input type="checkbox" id="wakeChk"> Håll skärmen tänd</label>
     <button class="btn danger" type="button" id="clearStart" hidden>Ta bort startpunkten</button>
     <p class="lan-hint" id="backMsg" role="status" aria-live="polite"></p>
   </div>
 
-  <p class="back-note">Positionen följs bara när appen är öppen. Ha telefonen upplåst med appen framme när du letar dig tillbaka.</p>
+  <p class="back-note">Spåret spelas bara in medan appen är öppen och skärmen är tänd. Låser du telefonen blir det ett avbrott i linjen. Slå på "Håll skärmen tänd" för ett obrutet spår.</p>
 </section>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -704,14 +713,57 @@ nav svg { width: 24px; height: 24px; }
         startLine = L.polyline([ll, cl], { color: '#FFFFFF', weight: 2.5, opacity: 0.85, dashArray: '6 8', interactive: false }).addTo(map);
       } else { startMarker.setLatLng(cl); startLine.setLatLngs([ll, cl]); }
     } else if (startMarker) { map.removeLayer(startMarker); map.removeLayer(startLine); startMarker = startLine = null; }
+    drawTrack();
     if (follow) map.setView(ll, Math.max(map.getZoom(), 15), { animate: false });
     rotateHunter();
+  }
+
+  // ---------- Spår ----------
+  // track = lista av segment; ett nytt segment börjar efter ett glapp (t.ex. låst skärm)
+  let track = [];
+  let trackLine = null;
+  let posTs = 0;          // när bevakningen senast gav en position
+  try { track = JSON.parse(localStorage.getItem(KEY + '.track')) || []; } catch (e) { track = []; }
+  const TRACK_GAP_MS = 2 * 60 * 1000, TRACK_MIN_M = 8, TRACK_MAX_ACC = 40, TRACK_MAX_PTS = 6000;
+  let lastTrackTs = 0;
+  try { lastTrackTs = +localStorage.getItem(KEY + '.trackTs') || 0; } catch (e) {}
+
+  function saveTrack() {
+    try { localStorage.setItem(KEY + '.track', JSON.stringify(track)); localStorage.setItem(KEY + '.trackTs', String(lastTrackTs)); } catch (e) {}
+  }
+  function trackLength() {
+    let m = 0;
+    track.forEach((seg) => { for (let i = 1; i < seg.length; i++) m += distBearing({ lat: seg[i - 1][0], lon: seg[i - 1][1] }, { lat: seg[i][0], lon: seg[i][1] }).d; });
+    return m;
+  }
+  function recordPoint(p, ts) {
+    if (!start || !p || (p.acc || 999) > TRACK_MAX_ACC) return;
+    let seg = track[track.length - 1];
+    if (!seg || ts - lastTrackTs > TRACK_GAP_MS) { seg = []; track.push(seg); }
+    const last = seg[seg.length - 1];
+    if (last && distBearing({ lat: last[0], lon: last[1] }, p).d < TRACK_MIN_M) { lastTrackTs = ts; return; }
+    seg.push([+p.lat.toFixed(6), +p.lon.toFixed(6)]);
+    lastTrackTs = ts;
+    let total = track.reduce((n, s) => n + s.length, 0);
+    while (total > TRACK_MAX_PTS && track.length) { track[0].shift(); if (!track[0].length) track.shift(); total--; }
+    saveTrack();
+  }
+  function clearTrack() { track = []; lastTrackTs = 0; saveTrack(); drawTrack(); }
+  function drawTrack() {
+    if (!map) return;
+    const segs = track.filter((s) => s.length > 1);
+    $('legendTrack').hidden = !segs.length;
+    if (!segs.length) { if (trackLine) { map.removeLayer(trackLine); trackLine = null; } return; }
+    if (!trackLine) trackLine = L.polyline(segs, { color: '#E5484D', weight: 4, opacity: 0.9, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(map);
+    else trackLine.setLatLngs(segs);
   }
 
   function startWatch() {
     if (DEMO || watchId != null || !navigator.geolocation) return;
     watchId = navigator.geolocation.watchPosition((p) => {
       pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
+      posTs = Date.now();
+      recordPoint(pos, p.timestamp || Date.now());
       updateMap();
       updateBack();
     }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
@@ -719,9 +771,9 @@ nav svg { width: 24px; height: 24px; }
   function stopWatch() {
     if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   }
-  // GPS behövs när kartan eller hitta tillbaka-sidan är synlig
+  // GPS behövs när kartan eller hitta tillbaka-sidan är synlig, och hela tiden medan ett spår spelas in
   function syncWatch() {
-    const need = (page === 'vind' && !$('mapView').hidden) || page === 'back';
+    const need = (page === 'vind' && !$('mapView').hidden) || page === 'back' || !!start;
     if (need) startWatch(); else stopWatch();
   }
 
@@ -815,13 +867,17 @@ nav svg { width: 24px; height: 24px; }
       ? 'Pilen visar riktningen med norr uppåt. Aktivera kompassen så följer den telefonen.'
       : (near ? ' ' : (pos.acc > 30 ? `Svag GPS just nu, ±${Math.round(pos.acc)} m` : 'Gå dit pilen pekar'));
     $('backDial').setAttribute('aria-label', near ? 'Du är framme vid startpunkten' : `Startpunkten ligger ${fmtDist(d)} åt ${dirName(b)}`);
+    const len = trackLength();
+    $('trackInfo').textContent = len > 0 ? `Spår inspelat: ${fmtDist(len)}${track.length > 1 ? ` (${track.length - 1} avbrott)` : ''}` : 'Spåret börjar spelas in när du går.';
   }
 
   function saveStart(p) {
     start = { lat: p.lat, lon: p.lon, acc: p.acc, at: Date.now() };
     try { localStorage.setItem(KEY + '.start', JSON.stringify(start)); } catch (e) {}
-    $('backMsg').textContent = `Startpunkten är satt, ±${Math.round(p.acc || 0)} m.`;
-    updateMap(); updateBack(true);
+    // Nytt spår som börjar i startpunkten
+    track = [[[+p.lat.toFixed(6), +p.lon.toFixed(6)]]]; lastTrackTs = Date.now(); saveTrack();
+    $('backMsg').textContent = `Startpunkten är satt, ±${Math.round(p.acc || 0)} m. Spåret spelas in medan appen är öppen.`;
+    syncWatch(); updateMap(); updateBack(true);
   }
 
   let moveArmed = null;
@@ -837,15 +893,21 @@ nav svg { width: 24px; height: 24px; }
     if (moveArmed) { clearTimeout(moveArmed); moveArmed = null; }
     if (DEMO) { if (pos) saveStart(pos); return; }
     if (!navigator.geolocation) { $('backMsg').textContent = 'Telefonen kan inte ge någon position.'; return; }
+    // En färsk och bra position från bevakningen räcker
+    if (pos && Date.now() - posTs < 10000 && pos.acc <= 30) { saveStart(pos); return; }
     btn.disabled = true; btn.textContent = 'Hämtar exakt position…';
+    let done = false;
+    const finish = (p) => {
+      if (done) return; done = true; btn.disabled = false;
+      if (p) saveStart(p);
+      else { updateBack(true); $('backMsg').textContent = 'Fick ingen position. Tillåt platstjänster för appen och försök igen under öppen himmel.'; }
+    };
     navigator.geolocation.getCurrentPosition((p) => {
-      btn.disabled = false;
-      pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
-      saveStart(pos);
-    }, () => {
-      btn.disabled = false; updateBack(true);
-      $('backMsg').textContent = 'Fick ingen position. Tillåt platstjänster för appen och försök igen under öppen himmel.';
-    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+      pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }; posTs = Date.now();
+      finish(pos);
+    }, () => finish(pos && Date.now() - posTs < 60000 ? pos : null), { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
+    // Om förfrågan hänger sig: ta bevakningens senaste position
+    setTimeout(() => { if (!done && pos && Date.now() - posTs < 60000) finish(pos); }, 8000);
   });
 
   let clearArmed = null;
@@ -860,8 +922,9 @@ nav svg { width: 24px; height: 24px; }
     start = null;
     try { localStorage.removeItem(KEY + '.start'); } catch (e) {}
     releaseWake(); $('wakeChk').checked = false;
-    $('backMsg').textContent = 'Startpunkten är borttagen.';
-    updateMap(); updateBack(true);
+    clearTrack();
+    $('backMsg').textContent = 'Startpunkten och spåret är borttagna.';
+    syncWatch(); updateMap(); updateBack(true);
   });
 
   $('showStartMap').addEventListener('click', () => {
@@ -869,8 +932,9 @@ nav svg { width: 24px; height: 24px; }
     setTimeout(() => {
       if (!map || !start) return;
       follow = false;
-      if (pos) map.fitBounds([[pos.lat, pos.lon], [start.lat, start.lon]], { padding: [50, 50], maxZoom: 17 });
-      else map.setView([start.lat, start.lon], 16);
+      const pts = [[start.lat, start.lon], ...track.flat()];
+      if (pos) pts.push([pos.lat, pos.lon]);
+      map.fitBounds(pts, { padding: [50, 50], maxZoom: 17 });
     }, 50);
   });
 

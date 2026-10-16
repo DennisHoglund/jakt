@@ -14,6 +14,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 /* Layout: en skärm, kompassen i mitten, timremsa under, flikrad nederst */
 :root {
@@ -29,6 +31,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body {
   background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px;
@@ -56,10 +59,33 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .dial { display: flex; justify-content: center; position: relative; }
 .dial svg { width: min(300px, 78vw, 40dvh); height: auto; display: block; }
 .compass-btn {
-  position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+  align-self: center;
   background: var(--accent); color: #1B1406; border: 0; border-radius: 999px;
   padding: 0 18px; min-height: 44px; font-weight: 600; font-size: 15px;
 }
+
+.seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: var(--panel); border-radius: 12px; padding: 4px; }
+.seg button { background: none; border: 0; min-height: 40px; border-radius: 9px; color: var(--muted); font-weight: 600; font-size: 15px; }
+.seg button[aria-selected="true"] { background: var(--line); color: var(--fg); }
+
+.mapview { position: relative; flex: none; height: min(400px, 52dvh); border-radius: 16px; overflow: hidden; border: 1px solid var(--line); }
+#map { position: absolute; inset: 0; background: var(--panel); }
+.map-legend {
+  position: absolute; left: 10px; top: 10px; z-index: 500; pointer-events: none;
+  background: rgba(19, 32, 26, .85); color: var(--fg); font-size: 12px; border-radius: 8px; padding: 5px 9px;
+  display: flex; align-items: center; gap: 6px;
+}
+.map-legend i { width: 12px; height: 12px; border-radius: 3px; background: rgba(217, 164, 65, .45); border: 1px solid var(--accent); }
+.center-btn {
+  position: absolute; right: 10px; bottom: 26px; z-index: 500; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--line); color: var(--fg); display: grid; place-items: center;
+}
+.map-msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--muted); z-index: 400; pointer-events: none; }
+.map-msg:empty { display: none; }
+.leaflet-container { font-family: var(--body); }
+.leaflet-control-attribution { font-size: 9px; }
+.hunter-icon { background: none; border: 0; }
+.hunter-rot { width: 72px; height: 72px; transition: transform .15s linear; }
 
 .reading { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .big { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 11vw, 44px); line-height: 1; text-wrap: balance; }
@@ -121,7 +147,21 @@ nav svg { width: 24px; height: 24px; }
 
   <div class="status" id="status" role="status" aria-live="polite"></div>
 
-  <div class="dial">
+  <div class="seg" role="tablist" aria-label="Visning">
+    <button type="button" role="tab" id="segCompass" aria-selected="true">Kompass</button>
+    <button type="button" role="tab" id="segMap" aria-selected="false">Karta</button>
+  </div>
+
+  <div class="mapview" id="mapView" hidden>
+    <div id="map"></div>
+    <div class="map-msg" id="mapMsg"></div>
+    <div class="map-legend"><i></i>Din vittring, ca 400 m</div>
+    <button class="center-btn" id="centerBtn" type="button" aria-label="Centrera kartan på mig">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+    </button>
+  </div>
+
+  <div class="dial" id="compassView">
     <svg viewBox="0 0 300 300" role="img" id="dialSvg" aria-label="Kompass med vindriktning">
       <g id="rose">
         <circle cx="150" cy="150" r="138" fill="#1A2B22" stroke="#2E4436" stroke-width="2"/>
@@ -157,8 +197,8 @@ nav svg { width: 24px; height: 24px; }
         <circle cx="150" cy="148" r="3" fill="#B5531F"/>
       </g>
     </svg>
-    <button class="compass-btn" id="compassBtn" type="button" hidden>Aktivera kompass</button>
   </div>
+  <button class="compass-btn" id="compassBtn" type="button" hidden>Aktivera kompass</button>
 
   <section class="reading">
     <div class="big" id="big">Hämtar vind…</div>
@@ -210,6 +250,7 @@ nav svg { width: 24px; height: 24px; }
   let heading = null;     // målvärde från kompassen
   let shown = 0;          // utjämnat värde som ritas
   let animating = false;
+  let pos = null;         // { lat, lon, acc }
 
   // Streck var 30:e grad på rosen
   (() => {
@@ -257,12 +298,12 @@ nav svg { width: 24px; height: 24px; }
       const r = await fetch(url, { signal: ctrl.signal });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json();
-      return { fetchedAt: Date.now(), h: j.hourly };
+      return { fetchedAt: Date.now(), lat, lon, h: j.hourly };
     } finally { clearTimeout(t); }
   }
 
   async function refresh() {
-    if (DEMO) { data = demoData(); setStatus('Exempeldata, inte din position'); render(); return; }
+    if (DEMO) { data = demoData(); pos = { lat: 59.858, lon: 17.255, acc: 12 }; setStatus('Exempeldata, inte din position'); render(); return; }
     setStatus('Hämtar position…');
     let c;
     try { c = await getPos(); }
@@ -271,6 +312,8 @@ nav svg { width: 24px; height: 24px; }
         : 'Ingen position. Tillåt platstjänster för Safari under Inställningar › Integritet och tryck Uppdatera.');
       render(); return;
     }
+    pos = { lat: c.latitude, lon: c.longitude, acc: c.accuracy };
+    updateMap();
     setStatus('Hämtar vind…');
     try { data = await fetchWind(c.latitude, c.longitude); save(data); setStatus(''); }
     catch (e) {
@@ -321,6 +364,7 @@ nav svg { width: 24px; height: 24px; }
     if (turn >= 0) { note.textContent = `Vinden vrider mot ${dirName(h.wind_direction_10m[turn])} kring kl ${h.time[turn].slice(11, 13)}`; note.classList.remove('calm'); }
     else { note.textContent = 'Stabil vindriktning närmaste timmarna'; note.classList.add('calm'); }
 
+    updateMap();
     const f = new Date(data.fetchedAt), age = (Date.now() - data.fetchedAt) / 36e5;
     $('meta').innerHTML = data.demo ? 'Exempeldata<br>&nbsp;'
       : `Open-Meteo · ${pad(f.getHours())}:${pad(f.getMinutes())}<br>${age >= 2 ? Math.floor(age) + ' tim gammal' : 'Sparad offline'}`;
@@ -362,6 +406,7 @@ nav svg { width: 24px; height: 24px; }
     const delta = ((heading - shown + 540) % 360) - 180;
     shown = norm(shown + delta * 0.2);
     $('rose').setAttribute('transform', `rotate(${-shown} 150 150)`);
+    rotateHunter();
     if (ts - lastRel > 250) { updateRel(); lastRel = ts; }
     if (Math.abs(delta) > 0.3) requestAnimationFrame(tick); else { animating = false; updateRel(); }
   }
@@ -386,12 +431,114 @@ nav svg { width: 24px; height: 24px; }
   if (needsPermission) $('compassBtn').hidden = false;
   else if (typeof DeviceOrientationEvent !== 'undefined') listen();
 
+  // Karta
+  const HUNTER_SVG = `<div class="hunter-rot"><svg viewBox="96 96 108 108" width="72" height="72" aria-hidden="true">
+    <defs><radialGradient id="mbeam" cx="150" cy="150" r="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0.2" stop-color="#FFFFFF" stop-opacity="0.55"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>
+    <path d="M150 150 L126 99 A56 56 0 0 1 174 99 Z" fill="url(#mbeam)"/>
+    <ellipse cx="151.5" cy="155" rx="23" ry="12" fill="#000" fill-opacity="0.3"/>
+    <ellipse cx="129.5" cy="146" rx="5.5" ry="9" fill="#4E5D41" stroke="#FFF" stroke-width="1.8"/>
+    <ellipse cx="170.5" cy="146" rx="5.5" ry="9" fill="#4E5D41" stroke="#FFF" stroke-width="1.8"/>
+    <rect x="128" y="141" width="44" height="20" rx="10" fill="#5B6B4E" stroke="#FFF" stroke-width="1.8"/>
+    <line x1="161" y1="164" x2="168" y2="128" stroke="#2A2118" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="150" cy="139.5" rx="7" ry="4.5" fill="#B5531F" stroke="#FFF" stroke-width="1.8"/>
+    <circle cx="150" cy="148" r="9.5" fill="#E07A3F" stroke="#FFF" stroke-width="1.8"/>
+    <circle cx="150" cy="148" r="3" fill="#B5531F"/></svg></div>`;
+  let map = null, marker = null, accCircle = null, cone = null, watchId = null, follow = true;
+
+  function initMap() {
+    if (typeof L === 'undefined') { $('mapMsg').textContent = 'Kartan kunde inte laddas. Öppna appen med täckning en gång så sparas den.'; return false; }
+    map = L.map('map', { zoomControl: false, maxZoom: 19 });
+    const layers = {
+      'Terräng': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 19, attribution: '© OpenStreetMap · SRTM · OpenTopoMap' }),
+      'Satellit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 19, attribution: 'Esri, Maxar, Earthstar Geographics' }),
+      'Karta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' })
+    };
+    let chosen = 'Terräng';
+    try { chosen = localStorage.getItem(KEY + '.layer') || chosen; } catch (e) {}
+    (layers[chosen] || layers['Terräng']).addTo(map);
+    L.control.layers(layers, null, { position: 'topright' }).addTo(map);
+    map.on('baselayerchange', (e) => { try { localStorage.setItem(KEY + '.layer', e.name); } catch (_) {} });
+    map.on('dragstart', () => { follow = false; });
+    if (pos) map.setView([pos.lat, pos.lon], 16); else map.setView([62.5, 16], 5);
+    return true;
+  }
+
+  function conePoints(lat, lon, bearing, spread, dist) {
+    const pts = [[lat, lon]];
+    const k = 111320, cosLat = Math.cos((lat * Math.PI) / 180);
+    for (let a = bearing - spread; a <= bearing + spread + 0.01; a += 4) {
+      const r = (a * Math.PI) / 180;
+      pts.push([lat + (dist * Math.cos(r)) / k, lon + (dist * Math.sin(r)) / (k * cosLat)]);
+    }
+    return pts;
+  }
+
+  function rotateHunter() {
+    const el = marker && marker.getElement();
+    const inner = el && el.querySelector('.hunter-rot');
+    if (inner) inner.style.transform = `rotate(${heading == null ? 0 : shown}deg)`;
+  }
+
+  function updateMap() {
+    if (!map || $('mapView').hidden) return;
+    if (!pos) { $('mapMsg').textContent = 'Väntar på position…'; return; }
+    $('mapMsg').textContent = '';
+    const ll = [pos.lat, pos.lon];
+    if (!marker) {
+      accCircle = L.circle(ll, { radius: pos.acc || 30, color: '#FFFFFF', weight: 1, opacity: 0.6, fillOpacity: 0.08, interactive: false }).addTo(map);
+      marker = L.marker(ll, { icon: L.divIcon({ className: 'hunter-icon', html: HUNTER_SVG, iconSize: [72, 72], iconAnchor: [36, 36] }), interactive: false, keyboard: false }).addTo(map);
+    } else {
+      marker.setLatLng(ll);
+      accCircle.setLatLng(ll).setRadius(pos.acc || 30);
+    }
+    if (windFrom != null) {
+      const pts = conePoints(pos.lat, pos.lon, norm(windFrom + 180), 20, 400);
+      if (!cone) cone = L.polygon(pts, { color: '#D9A441', weight: 1.5, opacity: 0.9, fillColor: '#D9A441', fillOpacity: 0.28, interactive: false }).addTo(map);
+      else cone.setLatLngs(pts);
+    }
+    if (follow) map.setView(ll, Math.max(map.getZoom(), 15), { animate: false });
+    rotateHunter();
+  }
+
+  function startWatch() {
+    if (DEMO || watchId != null || !navigator.geolocation) return;
+    watchId = navigator.geolocation.watchPosition((p) => {
+      pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
+      updateMap();
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+  }
+  function stopWatch() {
+    if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  }
+
+  function setView(v) {
+    const isMap = v === 'map';
+    $('segCompass').setAttribute('aria-selected', String(!isMap));
+    $('segMap').setAttribute('aria-selected', String(isMap));
+    $('compassView').hidden = isMap;
+    $('mapView').hidden = !isMap;
+    try { localStorage.setItem(KEY + '.view', v); } catch (e) {}
+    if (isMap) {
+      if (!map && !initMap()) return;
+      setTimeout(() => { map.invalidateSize(); follow = true; updateMap(); }, 0);
+      startWatch();
+    } else stopWatch();
+  }
+  $('segCompass').addEventListener('click', () => setView('compass'));
+  $('segMap').addEventListener('click', () => setView('map'));
+  $('centerBtn').addEventListener('click', () => { follow = true; updateMap(); });
+
   $('refreshBtn').addEventListener('click', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   setInterval(render, 60 * 1000);
 
   data = DEMO ? null : load();
+  if (data && data.lat != null) pos = { lat: data.lat, lon: data.lon, acc: 50 };
   render();
+  let startView = 'compass';
+  try { startView = localStorage.getItem(KEY + '.view') || 'compass'; } catch (e) {}
+  setView(startView);
   refresh();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

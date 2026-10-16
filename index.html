@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jaktvind</title>
+<meta name="theme-color" content="#13201A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jaktvind">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: en skärm, kompassen i mitten, timremsa under, flikrad nederst */
+:root {
+  --bg: #13201A;
+  --panel: #1A2B22;
+  --line: #2E4436;
+  --fg: #E8EDE4;
+  --muted: #9DB0A2;
+  --accent: #D9A441;
+  --accent-bg: #3A2E14;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Barlow", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px;
+  display: flex; flex-direction: column;
+  -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+main {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px;
+  padding-top: max(20px, env(safe-area-inset-top, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+  padding-bottom: 12px; overflow-y: auto;
+}
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.eyebrow { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; margin: 2px 0 0; }
+.meta { font-size: 13px; color: var(--muted); text-align: right; line-height: 1.35; }
+
+.status { font-size: 14px; color: var(--accent); text-align: center; min-height: 0; }
+.status:empty { display: none; }
+
+.dial { display: flex; justify-content: center; position: relative; }
+.dial svg { width: min(300px, 78vw, 40dvh); height: auto; display: block; }
+.compass-btn {
+  position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+  background: var(--accent); color: #1B1406; border: 0; border-radius: 999px;
+  padding: 0 18px; min-height: 44px; font-weight: 600; font-size: 15px;
+}
+
+.reading { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.big { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 11vw, 44px); line-height: 1; text-wrap: balance; }
+.sub { font-size: 16px; color: var(--muted); }
+.rel { font-size: 17px; font-weight: 600; color: var(--fg); }
+
+.hours-wrap { display: flex; flex-direction: column; gap: 10px; }
+.hours { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.hour { background: var(--panel); border-radius: 10px; padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.hour .hh { font-size: 13px; color: var(--muted); }
+.hour .ms { font-weight: 600; }
+.hour svg { width: 20px; height: 20px; }
+.hour.turn { background: var(--accent-bg); }
+.hour.turn .hh, .hour.turn .ms { color: var(--accent); }
+.note { font-size: 14px; color: var(--accent); }
+.note.calm { color: var(--muted); }
+
+.refresh {
+  align-self: center; background: none; border: 1px solid var(--line); border-radius: 999px;
+  min-height: 44px; padding: 0 18px; color: var(--muted); font-size: 15px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+
+nav {
+  border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-top: 6px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+nav button {
+  background: none; border: 0; color: var(--muted); display: flex; flex-direction: column;
+  align-items: center; gap: 3px; min-height: 52px; font-size: 12px;
+}
+nav button[aria-current="page"] { color: var(--accent); font-weight: 600; }
+nav button:disabled { opacity: .45; cursor: default; }
+nav svg { width: 24px; height: 24px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div>
+      <div class="eyebrow">Din position</div>
+      <h1>Vind</h1>
+    </div>
+    <div class="meta" id="meta">&nbsp;</div>
+  </header>
+
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+
+  <div class="dial">
+    <svg viewBox="0 0 300 300" role="img" id="dialSvg" aria-label="Kompass med vindriktning">
+      <g id="rose">
+        <circle cx="150" cy="150" r="138" fill="#1A2B22" stroke="#2E4436" stroke-width="2"/>
+        <circle cx="150" cy="150" r="90" fill="none" stroke="#2E4436" stroke-width="1" stroke-dasharray="3 6"/>
+        <g id="ticks"></g>
+        <g id="wind" transform="rotate(0 150 150)" opacity="0">
+          <path d="M150 150 L192.75 267.5 A125 125 0 0 1 107.25 267.5 Z" fill="#D9A441" fill-opacity="0.22" stroke="#D9A441" stroke-opacity="0.6" stroke-width="1.5"/>
+          <line x1="150" y1="28" x2="150" y2="126" stroke="#D9A441" stroke-width="6" stroke-linecap="round"/>
+          <polygon points="150,142 141,122 159,122" fill="#D9A441"/>
+        </g>
+        <text x="150" y="32" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="20" fill="#E8EDE4">N</text>
+        <text x="278" y="157" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="600" font-size="16" fill="#9DB0A2">Ö</text>
+        <text x="150" y="282" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="600" font-size="16" fill="#9DB0A2">S</text>
+        <text x="22" y="157" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="600" font-size="16" fill="#9DB0A2">V</text>
+      </g>
+      <path d="M150 4 l-7 12 h14 z" fill="#E8EDE4" aria-hidden="true"/>
+      <circle cx="150" cy="150" r="7" fill="#E8EDE4"/>
+    </svg>
+    <button class="compass-btn" id="compassBtn" type="button" hidden>Aktivera kompass</button>
+  </div>
+
+  <section class="reading">
+    <div class="big" id="big">Hämtar vind…</div>
+    <div class="sub" id="sub">&nbsp;</div>
+    <div class="rel" id="rel">&nbsp;</div>
+  </section>
+
+  <section class="hours-wrap" aria-labelledby="hoursTitle">
+    <div class="eyebrow" id="hoursTitle">Kommande timmar</div>
+    <ol class="hours" id="hours"></ol>
+    <div class="note" id="note"></div>
+  </section>
+
+  <button class="refresh" id="refreshBtn" type="button">
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2v3h-3"/></svg>
+    Uppdatera
+  </button>
+</main>
+
+<nav aria-label="Flikar">
+  <button type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind</button>
+  <button type="button" disabled title="Kommer i steg 2"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus</button>
+  <button type="button" disabled title="Kommer i steg 3"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Platser</button>
+  <button type="button" disabled title="Kommer i steg 4"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
+</nav>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const DIRS = ['N', 'NO', 'Ö', 'SO', 'S', 'SV', 'V', 'NV'];
+  const REL = ['rakt framifrån', 'snett framifrån höger', 'från höger', 'snett bakifrån höger',
+               'rakt bakifrån', 'snett bakifrån vänster', 'från vänster', 'snett framifrån vänster'];
+  const SIDE = ['rakt fram', 'framåt höger', 'åt höger', 'bakåt höger', 'rakt bakåt', 'bakåt vänster', 'åt vänster', 'framåt vänster'];
+  const KEY = 'jaktvind.forecast.v1';
+  const DEMO = /[?&]demo\b/.test(location.search);
+
+  const norm = (a) => ((a % 360) + 360) % 360;
+  const dirName = (d) => DIRS[Math.round(norm(d) / 45) % 8];
+  const angDiff = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+  const pad = (n) => String(n).padStart(2, '0');
+  const hourKey = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}`;
+
+  let data = null;
+  let windFrom = null;
+  let heading = null;     // målvärde från kompassen
+  let shown = 0;          // utjämnat värde som ritas
+  let animating = false;
+
+  // Streck var 30:e grad på rosen
+  (() => {
+    const g = $('ticks');
+    for (let a = 0; a < 360; a += 30) {
+      if (a % 90 === 0) continue;
+      const r = (a * Math.PI) / 180;
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1', 150 + 128 * Math.sin(r)); l.setAttribute('y1', 150 - 128 * Math.cos(r));
+      l.setAttribute('x2', 150 + 136 * Math.sin(r)); l.setAttribute('y2', 150 - 136 * Math.cos(r));
+      l.setAttribute('stroke', '#2E4436'); l.setAttribute('stroke-width', '2');
+      g.appendChild(l);
+    }
+  })();
+
+  const setStatus = (t) => { $('status').textContent = t || ''; };
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
+  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+
+  function demoData() {
+    const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() - 1);
+    const dirs = [225, 225, 225, 230, 260, 275, 300, 315, 315, 320, 320, 320];
+    const spd = [4, 4, 4, 4.4, 5, 5.2, 5.8, 6.1, 6, 5.5, 5, 4.8];
+    const time = dirs.map((_, i) => { const d = new Date(start.getTime() + i * 36e5); return hourKey(d) + ':00'; });
+    return { demo: true, fetchedAt: Date.now(), h: { time, wind_direction_10m: dirs, wind_speed_10m: spd, wind_gusts_10m: spd.map((s) => s + 3) } };
+  }
+
+  function getPos() {
+    return new Promise((res, rej) => {
+      if (!navigator.geolocation) return rej(new Error('Ingen GPS'));
+      navigator.geolocation.getCurrentPosition((p) => res(p.coords), rej,
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60 * 1000 });
+    });
+  }
+
+  async function fetchWind(lat, lon) {
+    const url = 'https://api.open-meteo.com/v1/forecast'
+      + `?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}`
+      + '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m'
+      + '&wind_speed_unit=ms&timezone=auto&forecast_days=2';
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      return { fetchedAt: Date.now(), h: j.hourly };
+    } finally { clearTimeout(t); }
+  }
+
+  async function refresh() {
+    if (DEMO) { data = demoData(); setStatus('Exempeldata, inte din position'); render(); return; }
+    setStatus('Hämtar position…');
+    let c;
+    try { c = await getPos(); }
+    catch (e) {
+      setStatus(data ? 'Ingen position. Visar sparad prognos.'
+        : 'Ingen position. Tillåt platstjänster för Safari under Inställningar › Integritet och tryck Uppdatera.');
+      render(); return;
+    }
+    setStatus('Hämtar vind…');
+    try { data = await fetchWind(c.latitude, c.longitude); save(data); setStatus(''); }
+    catch (e) {
+      setStatus(data ? 'Ingen täckning. Visar sparad prognos.'
+        : 'Kunde inte hämta vinden. Kontrollera täckningen och tryck Uppdatera.');
+    }
+    render();
+  }
+
+  function arrowSvg(rot) {
+    return `<svg viewBox="0 0 20 20" aria-hidden="true" style="transform: rotate(${rot}deg)"><path d="M10 17V3M5 8l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
+  function render() {
+    const list = $('hours');
+    if (!data) { $('big').textContent = 'Ingen vinddata än'; $('sub').textContent = ' '; list.textContent = ''; return; }
+    const h = data.h;
+    const i = h.time.findIndex((t) => t.slice(0, 13) === hourKey(new Date()));
+    if (i < 0) {
+      windFrom = null; $('wind').setAttribute('opacity', '0');
+      $('big').textContent = 'Prognosen har gått ut';
+      $('sub').textContent = 'Tryck Uppdatera när du har täckning';
+      $('rel').textContent = ' '; list.textContent = ''; $('note').textContent = '';
+      return;
+    }
+    const dir = h.wind_direction_10m[i];
+    windFrom = dir;
+    $('wind').setAttribute('transform', `rotate(${dir} 150 150)`);
+    $('wind').setAttribute('opacity', '1');
+    $('big').textContent = `Från ${dirName(dir)} · ${Math.round(h.wind_speed_10m[i])} m/s`;
+    $('sub').textContent = `Byar ${Math.round(h.wind_gusts_10m[i])} m/s · ${Math.round(dir)}°`;
+    $('dialSvg').setAttribute('aria-label', `Vinden kommer från ${dirName(dir)}, vittringen drar mot ${dirName(dir + 180)}`);
+    updateRel();
+
+    list.textContent = '';
+    let turn = -1;
+    for (let k = 1; k <= 6 && i + k < h.time.length; k++) {
+      const j = i + k, d = h.wind_direction_10m[j], s = Math.round(h.wind_speed_10m[j]);
+      const changed = angDiff(d, dir) >= 45;
+      if (changed && turn < 0) turn = j;
+      const li = document.createElement('li');
+      li.className = 'hour' + (changed ? ' turn' : '');
+      li.setAttribute('aria-label', `Kl ${h.time[j].slice(11, 13)}: från ${dirName(d)}, ${s} meter per sekund`);
+      li.innerHTML = `<span class="hh">${h.time[j].slice(11, 13)}</span>${arrowSvg(norm(d + 180))}<span class="ms">${s}</span>`;
+      list.appendChild(li);
+    }
+    const note = $('note');
+    if (turn >= 0) { note.textContent = `Vinden vrider mot ${dirName(h.wind_direction_10m[turn])} kring kl ${h.time[turn].slice(11, 13)}`; note.classList.remove('calm'); }
+    else { note.textContent = 'Stabil vindriktning närmaste timmarna'; note.classList.add('calm'); }
+
+    const f = new Date(data.fetchedAt), age = (Date.now() - data.fetchedAt) / 36e5;
+    $('meta').innerHTML = data.demo ? 'Exempeldata<br>&nbsp;'
+      : `Open-Meteo · ${pad(f.getHours())}:${pad(f.getMinutes())}<br>${age >= 2 ? Math.floor(age) + ' tim gammal' : 'Sparad offline'}`;
+  }
+
+  function updateRel() {
+    if (windFrom == null) { $('rel').textContent = ' '; return; }
+    if (heading == null) { $('rel').textContent = `Vittringen drar mot ${dirName(windFrom + 180)}`; return; }
+    const idx = Math.round(norm(windFrom - heading) / 45) % 8;
+    $('rel').textContent = `Vinden ${REL[idx]} · vittring ${SIDE[(idx + 4) % 8]}`;
+  }
+
+  // Kompass
+  function setHeading(v) {
+    if (heading == null) shown = v;
+    heading = v;
+    if (!animating) { animating = true; requestAnimationFrame(tick); }
+  }
+  let lastRel = 0;
+  function tick(ts) {
+    const delta = ((heading - shown + 540) % 360) - 180;
+    shown = norm(shown + delta * 0.2);
+    $('rose').setAttribute('transform', `rotate(${-shown} 150 150)`);
+    if (ts - lastRel > 250) { updateRel(); lastRel = ts; }
+    if (Math.abs(delta) > 0.3) requestAnimationFrame(tick); else { animating = false; updateRel(); }
+  }
+  function onOri(e) { if (typeof e.webkitCompassHeading === 'number') setHeading(e.webkitCompassHeading); }
+  function onAbs(e) { if (e.alpha != null) setHeading(norm(360 - e.alpha)); }
+  function listen() {
+    if ('ondeviceorientationabsolute' in window) window.addEventListener('deviceorientationabsolute', onAbs, true);
+    else window.addEventListener('deviceorientation', onOri, true);
+    $('compassBtn').hidden = true;
+  }
+  const needsPermission = typeof DeviceOrientationEvent !== 'undefined'
+    && typeof DeviceOrientationEvent.requestPermission === 'function';
+
+  $('compassBtn').addEventListener('click', async () => {
+    try {
+      const p = await DeviceOrientationEvent.requestPermission();
+      if (p === 'granted') listen();
+      else setStatus('Kompassen nekades. Stäng appen helt och öppna den igen för att få frågan på nytt.');
+    } catch (e) { setStatus('Kompassen är inte tillgänglig på den här enheten.'); }
+  });
+
+  if (needsPermission) $('compassBtn').hidden = false;
+  else if (typeof DeviceOrientationEvent !== 'undefined') listen();
+
+  $('refreshBtn').addEventListener('click', refresh);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  setInterval(render, 60 * 1000);
+
+  data = DEMO ? null : load();
+  render();
+  refresh();
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>

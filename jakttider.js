@@ -212,6 +212,31 @@ window.JAKT = (() => {
     'Hagel: högst 3 patroner (2 i magasinet), hagel högst 4,1 mm (US 1), pipa minst 48 cm.'
   ];
 
+  // Bilder: latinskt namn + varianter [svensk etikett, engelskt sökord] för Wikimedia Commons.
+  const HH = [['Hane', 'male'], ['Hona', 'female']];
+  const TH = [['Tupp', 'male'], ['Höna', 'female']];
+  const ARS = [['Sommardräkt', 'summer'], ['Vinterdräkt', 'winter']];
+  const ADU = [['Adult', 'adult'], ['Ungfågel', 'juvenile']];
+  const BILD = {
+    alg: ['Alces alces', [['Tjur', 'bull'], ['Ko', 'cow'], ['Kalv', 'calf']]],
+    kronhjort: ['Cervus elaphus', [['Hjort', 'stag'], ['Hind', 'hind'], ['Kalv', 'calf']]],
+    dovhjort: ['Dama dama', [['Hjort', 'buck'], ['Hind', 'doe'], ['Kalv', 'fawn']]],
+    radjur: ['Capreolus capreolus', [['Bock', 'buck'], ['Get', 'doe'], ['Kid', 'fawn']]],
+    vildsvin: ['Sus scrofa', [['Galt', 'boar'], ['Sugga med kultingar', 'piglets'], ['Årsunge', 'juvenile']]],
+    falthare: ['Lepus europaeus'], skogshare: ['Lepus timidus', [['Sommarpäls', 'summer'], ['Vinterpäls', 'winter']]],
+    baver: ['Castor fiber'], rodrav: ['Vulpes vulpes', [['Vuxen', 'adult'], ['Unge', 'cub']]],
+    iller: ['Mustela putorius'], skogsmard: ['Martes martes'], gravling: ['Meles meles'],
+    'tjäder': ['Tetrao urogallus', TH], orre: ['Lyrurus tetrix', TH], jarpe: ['Tetrastes bonasia', TH],
+    dalripa: ['Lagopus lagopus', ARS], 'fjällripa': ['Lagopus muta', ARS],
+    fasan: ['Phasianus colchicus', TH], rapphona: ['Perdix perdix'], morkulla: ['Scolopax rusticola'], ringduva: ['Columba palumbus'],
+    grasand: ['Anas platyrhynchos', HH], kricka: ['Anas crecca', HH], 'bläsand': ['Mareca penelope', HH],
+    knipa: ['Bucephala clangula', HH], storskrake: ['Mergus merganser', HH], vigg: ['Aythya fuligula', HH], sjoorre: ['Melanitta nigra', HH],
+    'grågås': ['Anser anser'], 'kanadagås': ['Branta canadensis'], blasgas: ['Anser albifrons'],
+    fiskmas: ['Larus canus', ADU], gratrut: ['Larus argentatus', ADU],
+    'kråka': ['Corvus cornix'], kaja: ['Coloeus monedula'], skata: ['Pica pica'], raka: ['Corvus frugilegus'], notskrika: ['Garrulus glandarius']
+  };
+  ARTER.forEach((a) => { const b = BILD[a.id]; if (b) { a.latin = b[0]; a.var = b[1] || null; } });
+
   // Rader som gäller för ett län
   function rowsFor(art, lan) {
     const named = {};

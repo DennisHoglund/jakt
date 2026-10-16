@@ -144,6 +144,33 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .chip { display: inline-flex; gap: 6px; align-items: baseline; font-size: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; }
 .chip-l { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .chip.off span:last-child { color: #FF8A73; }
+.art-name-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; min-height: 44px; color: var(--fg); text-align: left; }
+.art-name-btn svg { width: 20px; height: 20px; color: var(--accent); flex: none; }
+
+.modal {
+  position: fixed; inset: 0; z-index: 1100; background: rgba(0, 0, 0, .72);
+  display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+.modal-box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; width: 100%; max-width: 560px; max-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 12px 12px 18px; border-bottom: 1px solid var(--line); }
+.modal-head h2 { font-family: var(--display); font-size: 28px; margin: 0; line-height: 1.1; }
+.latin { font-style: italic; color: var(--muted); font-size: 15px; }
+.close-btn { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); display: grid; place-items: center; }
+.close-btn svg { width: 22px; height: 22px; }
+.modal-body { overflow-y: auto; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 18px; -webkit-user-select: text; user-select: text; }
+.pic { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.pic .ph { width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; background: var(--line); overflow: hidden; }
+.pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pic figcaption { display: flex; flex-direction: column; gap: 2px; }
+.pic .lbl { font-weight: 600; font-size: 17px; }
+.pic .cred { font-size: 12px; color: var(--muted); }
+.pic .cred a { color: var(--muted); }
+.pic-msg { color: var(--muted); font-size: 15px; }
+@keyframes pulse { 50% { opacity: .5; } }
+.ph.loading { animation: pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ph.loading { animation: none; } }
+
 .klass-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 .empty { color: var(--muted); font-size: 15px; padding: 8px 0; }
 .closed-list { font-size: 14px; color: var(--muted); }
@@ -326,6 +353,21 @@ nav svg { width: 24px; height: 24px; }
     <p><a href="https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/jaktforordning-1987905_sfs-1987-905/" target="_blank" rel="noopener">Jaktförordningen hos Riksdagen</a></p>
   </footer>
 </section>
+
+<div class="modal" id="picModal" hidden role="dialog" aria-modal="true" aria-labelledby="picTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h2 id="picTitle"></h2>
+        <div class="latin" id="picLatin"></div>
+      </div>
+      <button class="close-btn" id="picClose" type="button" aria-label="Stäng">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="picBody"></div>
+  </div>
+</div>
 
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" aria-label="Meny" hidden>
@@ -759,7 +801,11 @@ nav svg { width: 24px; height: 24px; }
       cats[c].forEach(({ a, rows, open, next }) => {
         const card = document.createElement('article'); card.className = 'art';
         const head = document.createElement('div'); head.className = 'art-head';
-        const nm = document.createElement('div'); nm.className = 'art-name'; nm.textContent = a.n;
+        const nm = document.createElement('button'); nm.type = 'button'; nm.className = 'art-name art-name-btn';
+        nm.setAttribute('aria-label', `Visa bilder på ${a.n.toLowerCase()}`);
+        nm.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+        nm.prepend(document.createTextNode(a.n));
+        nm.addEventListener('click', () => openPics(a));
         const pill = document.createElement('span'); pill.className = 'pill ' + (open ? 'open' : 'soon');
         pill.textContent = open ? 'Öppen idag' : `Öppnar ${fmt(next.s)}`;
         head.append(nm, pill); card.appendChild(head);
@@ -811,6 +857,98 @@ nav svg { width: 24px; height: 24px; }
   });
   $('fltOpen').addEventListener('click', () => { filter = 'open'; try { localStorage.setItem(KEY + '.filter', filter); } catch (e) {} renderJakt(); });
   $('fltAll').addEventListener('click', () => { filter = 'all'; try { localStorage.setItem(KEY + '.filter', filter); } catch (e) {} renderJakt(); });
+  // ---------- Bilder (Wikimedia Commons) ----------
+  const BAD = /\b(map|range|distribution|skull|skelet\w*|drawing|illustration|naumann|plate|stamp|coin|logo|sign|track|print|museum|stuffed|taxiderm\w*|mounted|egg|feather|footprint|dropping|meat|hunt\w*)\b|\.svg$/i;
+  const stripHtml = (h) => { if (!h) return ''; const d = new DOMParser().parseFromString(h, 'text/html'); return (d.body.textContent || '').replace(/\s+/g, ' ').trim(); };
+
+  async function commonsSearch(q, limit) {
+    const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*'
+      + '&generator=search&gsrnamespace=6&gsrlimit=' + limit + '&gsrsearch=' + encodeURIComponent(q)
+      + '&prop=imageinfo&iiprop=url%7Cmime%7Csize%7Cextmetadata&iiurlwidth=900&iiextmetadatafilter=Artist%7CLicenseShortName';
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 10000);
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      const j = await r.json();
+      return Object.values((j.query && j.query.pages) || {})
+        .sort((a, b) => a.index - b.index)
+        .map((p) => ({ title: p.title, ii: p.imageinfo && p.imageinfo[0] }))
+        .filter((x) => x.ii && /jpeg|png|webp/.test(x.ii.mime) && x.ii.width >= 500 && x.ii.width >= x.ii.height * 0.8 && !BAD.test(x.title))
+        .map((x) => ({
+          src: x.ii.thumburl || x.ii.url,
+          page: x.ii.descriptionurl,
+          artist: stripHtml(x.ii.extmetadata && x.ii.extmetadata.Artist && x.ii.extmetadata.Artist.value),
+          lic: (x.ii.extmetadata && x.ii.extmetadata.LicenseShortName && x.ii.extmetadata.LicenseShortName.value) || ''
+        }));
+    } finally { clearTimeout(t); }
+  }
+
+  async function loadPics(a) {
+    const ck = KEY + '.pics.' + a.id;
+    try { const c = JSON.parse(localStorage.getItem(ck)); if (c && Date.now() - c.at < 30 * 864e5 && c.items.length) return c.items; } catch (e) {}
+    const used = new Set(), items = [];
+    const pick = (list) => list.find((x) => !used.has(x.src));
+    if (a.var) {
+      for (const [label, kw] of a.var) {
+        let hit = pick(await commonsSearch(`"${a.latin}" ${kw} filetype:bitmap`, 15));
+        if (!hit) hit = pick(await commonsSearch(`"${a.latin}" filetype:bitmap`, 15));
+        if (hit) { used.add(hit.src); items.push({ ...hit, label }); }
+      }
+    } else {
+      (await commonsSearch(`"${a.latin}" filetype:bitmap`, 20)).slice(0, 3).forEach((x) => items.push({ ...x, label: '' }));
+    }
+    if (items.length) try { localStorage.setItem(ck, JSON.stringify({ at: Date.now(), items })); } catch (e) {}
+    return items;
+  }
+
+  let lastFocus = null;
+  async function openPics(a) {
+    lastFocus = document.activeElement;
+    $('picTitle').textContent = a.n;
+    $('picLatin').textContent = a.latin || '';
+    const body = $('picBody'); body.textContent = '';
+    const slots = (a.var || [['', ''], ['', ''], ['', '']]).map(([label]) => {
+      const f = document.createElement('figure'); f.className = 'pic';
+      f.innerHTML = '<div class="ph loading"></div><figcaption><span class="lbl"></span><span class="cred">&nbsp;</span></figcaption>';
+      f.querySelector('.lbl').textContent = label;
+      body.appendChild(f); return f;
+    });
+    $('picModal').hidden = false;
+    document.body.style.overflow = 'hidden';
+    $('picClose').focus();
+    let items = [];
+    try { items = await loadPics(a); } catch (e) {}
+    if ($('picModal').hidden || $('picTitle').textContent !== a.n) return;
+    body.textContent = '';
+    if (!items.length) {
+      body.innerHTML = '<p class="pic-msg">Bilderna kunde inte hämtas. De laddas från Wikimedia Commons och kräver täckning första gången.</p>';
+      return;
+    }
+    items.forEach((it) => {
+      const f = document.createElement('figure'); f.className = 'pic';
+      const ph = document.createElement('div'); ph.className = 'ph loading';
+      const img = document.createElement('img'); img.loading = 'lazy'; img.decoding = 'async'; img.src = it.src;
+      img.alt = [a.n, it.label && it.label.toLowerCase()].filter(Boolean).join(', ');
+      img.addEventListener('load', () => ph.classList.remove('loading'));
+      ph.appendChild(img);
+      const cap = document.createElement('figcaption');
+      if (it.label) { const l = document.createElement('span'); l.className = 'lbl'; l.textContent = it.label; cap.appendChild(l); }
+      const cr = document.createElement('span'); cr.className = 'cred';
+      const link = document.createElement('a'); link.href = it.page; link.target = '_blank'; link.rel = 'noopener';
+      link.textContent = 'Wikimedia Commons';
+      cr.append(`Foto: ${it.artist || 'okänd'}${it.lic ? ', ' + it.lic : ''} · `, link);
+      cap.appendChild(cr);
+      f.append(ph, cap); body.appendChild(f);
+    });
+  }
+  function closePics() {
+    $('picModal').hidden = true;
+    document.body.style.overflow = '';
+    if (lastFocus) lastFocus.focus();
+  }
+  $('picClose').addEventListener('click', closePics);
+  $('picModal').addEventListener('click', (e) => { if (e.target === $('picModal')) closePics(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('picModal').hidden) closePics(); });
+
   fillLanSelect();
   J.KLASS.forEach((t) => { const li = document.createElement('li'); li.textContent = t; $('klassList').appendChild(li); });
 

@@ -194,6 +194,68 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .moon-phase { font-family: var(--display); font-weight: 700; font-size: 24px; }
 .moon-sub { font-size: 14px; color: var(--muted); }
 
+/* Logg */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.quick .btn { min-height: 72px; font-size: 22px; font-family: var(--display); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.q-plus { font-size: 30px; line-height: 1; }
+.quick .q-obs { background: #23402C; border-color: #3D7049; color: #CFEFC2; }
+.quick .q-kill { background: var(--accent); border-color: var(--accent); color: #1B1406; }
+.q-note { margin-top: -6px; }
+.log-filters { display: flex; flex-direction: column; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-btn { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 15px; }
+.chip-btn[aria-pressed="true"] { background: var(--line); color: var(--fg); border-color: #47624F; font-weight: 600; }
+#logArt { font: inherit; font-size: 15px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-height: 40px; padding: 0 10px; }
+.log-day { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.log-day h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 4px 0 0; }
+.entry { text-align: left; width: 100%; background: var(--panel); border: 1px solid transparent; border-radius: 12px; padding: 12px 14px; color: var(--fg); display: flex; flex-direction: column; gap: 4px; }
+.entry:focus-visible { border-color: var(--accent); }
+.e-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.e-tag { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.e-tag.obs { background: #23402C; color: #A8E096; }
+.e-tag.kill { background: var(--accent-bg); color: var(--accent); }
+.e-tag.note { background: var(--line); color: var(--fg); }
+.e-title { font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.15; }
+.e-line { font-size: 14px; color: var(--muted); }
+.e-note { font-size: 15px; font-style: italic; }
+.e-title-note { font-family: var(--body); font-weight: 600; font-size: 17px; }
+.log-export { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+
+.sheet-wrap { position: fixed; inset: 0; z-index: 1100; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; }
+.sheet {
+  background: var(--panel); width: 100%; max-width: 560px; max-height: calc(100% - max(24px, env(safe-area-inset-top, 0px))); border-radius: 18px 18px 0 0;
+  border: 1px solid var(--line); border-bottom: 0; display: flex; flex-direction: column;
+}
+.sheet-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 14px 10px 18px; }
+.sheet-head h2 { margin: 0; font-family: var(--display); font-size: 26px; }
+.close-btn { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); display: grid; place-items: center; }
+.close-btn svg { width: 22px; height: 22px; }
+.sheet-body { overflow-y: auto; padding: 0 18px 12px; display: flex; flex-direction: column; gap: 14px; -webkit-user-select: text; user-select: text; }
+.sheet-foot {
+  display: flex; gap: 10px; padding: 12px 18px max(14px, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line);
+}
+.sheet-foot .btn { flex: 1; min-height: 54px; font-size: 18px; }
+.sheet-foot .btn.danger { flex: 0 0 auto; }
+.seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--bg); }
+.auto { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.f-block { display: flex; flex-direction: column; gap: 8px; }
+.art-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.art-btn { min-height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font-size: 15px; padding: 0 6px; }
+.art-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #1B1406; font-weight: 700; }
+.art-cat { font-size: 12px; color: var(--muted); margin: 10px 0 6px; letter-spacing: .06em; text-transform: uppercase; }
+.link-btn { align-self: flex-start; background: none; border: 0; color: var(--accent); font-size: 15px; min-height: 40px; padding: 0; }
+.count-row { display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper button { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font-size: 24px; }
+.stepper output { min-width: 44px; text-align: center; font-family: var(--display); font-weight: 700; font-size: 26px; font-variant-numeric: tabular-nums; }
+.sheet textarea, .more-grid input {
+  font: inherit; font-size: 16px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+.more summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; color: var(--accent); font-size: 15px; }
+.more-grid { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
+.more-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+
 /* Hitta tillbaka */
 .back-empty p { margin: 0; color: var(--muted); font-size: 16px; max-width: 40ch; }
 .back-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -605,6 +667,103 @@ nav svg { width: 24px; height: 24px; }
   </div>
 </section>
 
+<section class="page" id="pageLogg" hidden aria-labelledby="loggTitle">
+  <header class="top">
+    <div class="title-row">
+      <button class="menu-btn" type="button" data-menu aria-label="Öppna menyn" aria-controls="drawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div>
+        <div class="eyebrow">Jaktdagbok</div>
+        <h1 id="loggTitle">Logg</h1>
+      </div>
+    </div>
+    <div class="meta" id="loggMeta">&nbsp;</div>
+  </header>
+
+  <div class="quick">
+    <button class="btn q-obs" type="button" data-new="obs"><span class="q-plus" aria-hidden="true">+</span>Sett</button>
+    <button class="btn q-kill" type="button" data-new="kill"><span class="q-plus" aria-hidden="true">+</span>Fällt</button>
+  </div>
+  <button class="btn ghost q-note" type="button" data-new="note">+ Anteckning</button>
+
+  <div class="log-filters" id="logFilters" hidden>
+    <div class="chips" role="group" aria-label="Visa">
+      <button type="button" class="chip-btn" data-flt="all" aria-pressed="true">Alla</button>
+      <button type="button" class="chip-btn" data-flt="obs" aria-pressed="false">Sett</button>
+      <button type="button" class="chip-btn" data-flt="kill" aria-pressed="false">Fällt</button>
+      <button type="button" class="chip-btn" data-flt="note" aria-pressed="false">Anteckningar</button>
+    </div>
+    <label class="sr-only" for="logArt">Art</label>
+    <select id="logArt"></select>
+  </div>
+
+  <div id="logList"></div>
+  <p class="empty" id="logEmpty">Inga poster än. Tryck <b>+ Sett</b> eller <b>+ Fällt</b> ute i skogen. Tid, plats, vind, väder och ljus sparas automatiskt.</p>
+
+  <div class="log-export" id="logExport" hidden>
+    <button class="btn" type="button" id="btnExport">Exportera till Excel (CSV)</button>
+    <p class="back-note">Loggen sparas bara i den här telefonen. Exportera då och då som backup eller för att dela med jaktlaget.</p>
+    <p class="lan-hint" id="exportMsg" role="status" aria-live="polite"></p>
+  </div>
+</section>
+
+<div class="sheet-wrap" id="logSheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="sheetTitle">Sett vilt</h2>
+      <button class="close-btn" id="sheetClose" type="button" aria-label="Stäng"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div class="seg seg3" role="tablist" aria-label="Typ">
+        <button type="button" role="tab" data-type="obs" aria-selected="true">Sett</button>
+        <button type="button" role="tab" data-type="kill" aria-selected="false">Fällt</button>
+        <button type="button" role="tab" data-type="note" aria-selected="false">Anteckning</button>
+      </div>
+      <div class="auto" id="sheetAuto">&nbsp;</div>
+
+      <div class="f-block" id="artBlock">
+        <div class="eyebrow" id="artLabel">Art</div>
+        <div class="art-grid" id="artRecent"></div>
+        <button type="button" class="link-btn" id="artMoreBtn" aria-expanded="false">Visa alla arter</button>
+        <div id="artAll" hidden></div>
+      </div>
+
+      <div class="f-block" id="whoBlock" hidden>
+        <div class="eyebrow">Kön och ålder</div>
+        <div class="chips" id="whoChips" role="group" aria-label="Kön och ålder"></div>
+        <div class="count-row">
+          <span id="countLabel">Antal</span>
+          <div class="stepper">
+            <button type="button" id="cMinus" aria-label="Färre">−</button>
+            <output id="cVal" aria-live="polite">1</output>
+            <button type="button" id="cPlus" aria-label="Fler">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="f-block" id="noteBlock">
+        <label class="eyebrow" for="fNote">Anteckning</label>
+        <textarea id="fNote" rows="3" placeholder="Vad hände?"></textarea>
+      </div>
+
+      <details class="more" id="moreDetails">
+        <summary>Fler detaljer</summary>
+        <div class="more-grid">
+          <label>Avstånd (m)<input id="fDist" type="number" inputmode="numeric" min="0" max="2000" step="1" placeholder="t.ex. 85"></label>
+          <label>Vapen och kaliber<input id="fWeapon" type="text" autocomplete="off" placeholder="t.ex. .308 Win"></label>
+          <label>Pass eller plats<input id="fPass" type="text" autocomplete="off" placeholder="t.ex. Tallmyren"></label>
+        </div>
+      </details>
+      <p class="lan-hint" id="sheetMsg" role="status" aria-live="polite"></p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn danger" type="button" id="sheetDelete" hidden>Radera</button>
+      <button class="btn primary" type="button" id="sheetSave">Spara</button>
+    </div>
+  </div>
+</div>
+
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" aria-label="Meny" hidden>
   <div class="drawer-head">Jaktvind</div>
@@ -617,6 +776,9 @@ nav svg { width: 24px; height: 24px; }
   <button type="button" class="drawer-item" data-page="ljus">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus och skjuttid
   </button>
+  <button type="button" class="drawer-item" data-page="logg">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg
+  </button>
   <button type="button" class="drawer-item" data-page="jakt">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Jakttider
   </button>
@@ -626,7 +788,7 @@ nav svg { width: 24px; height: 24px; }
   <button type="button" aria-current="page" id="navVind" data-page="vind"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind</button>
   <button type="button" data-page="ljus"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus</button>
   <button type="button" data-page="back"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6"/></svg>Start</button>
-  <button type="button" disabled title="Kommer i steg 4"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
+  <button type="button" data-page="logg"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
 </nav>
 
 <script src="vendor/suncalc.js"></script>
@@ -718,7 +880,7 @@ nav svg { width: 24px; height: 24px; }
         : 'Ingen position. Tillåt platstjänster för Safari under Inställningar › Integritet och tryck Uppdatera.');
       render(); return;
     }
-    pos = { lat: c.latitude, lon: c.longitude, acc: c.accuracy };
+    pos = { lat: c.latitude, lon: c.longitude, acc: c.accuracy }; posTs = Date.now();
     updateMap();
     if (page === 'jakt') detectLan();
     setStatus('Hämtar vind…');
@@ -1092,11 +1254,13 @@ nav svg { width: 24px; height: 24px; }
     $('pageJakt').hidden = p !== 'jakt';
     $('pageBack').hidden = p !== 'back';
     $('pageLjus').hidden = p !== 'ljus';
+    $('pageLogg').hidden = p !== 'logg';
     document.querySelectorAll('.drawer-item, nav [data-page]').forEach((b) => {
       if (b.dataset.page === p) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     if (p === 'jakt') { renderJakt(); detectLan(); }
     if (p === 'ljus') { dayOff = 0; renderLjus(); }
+    if (p === 'logg') renderLog();
     if (p === 'back') { updateBack(true); if (trip && trip.state === 'return') setRetView(retView); }
     if (p === 'vind' && !$('mapView').hidden) setTimeout(() => { if (map) { map.invalidateSize(); updateMap(); } }, 0);
     if (p !== 'back') releaseWake();
@@ -1613,6 +1777,286 @@ nav svg { width: 24px; height: 24px; }
   fillLanSelect();
   J.KLASS.forEach((t) => { const li = document.createElement('li'); li.textContent = t; $('klassList').appendChild(li); });
 
+  // ---------- Logg ----------
+  const TYPE_NAME = { obs: 'Sett', kill: 'Fällt', note: 'Anteckning' };
+  const TYPE_TITLE = { obs: 'Sett vilt', kill: 'Fällt vilt', note: 'Anteckning' };
+  const DEF_RECENT = ['alg', 'radjur', 'vildsvin', 'kronhjort', 'dovhjort', 'rodrav'];
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem(KEY + '.log')) || []; } catch (e) { log = []; }
+  let logFlt = 'all', logArtFlt = '';
+  let draft = null; // posten som redigeras i arket
+  const artById = (id) => J.ARTER.find((a) => a.id === id);
+  const saveLog = () => { try { localStorage.setItem(KEY + '.log', JSON.stringify(log)); return true; } catch (e) { return false; } };
+  const prefs = () => { try { return JSON.parse(localStorage.getItem(KEY + '.logPrefs')) || {}; } catch (e) { return {}; } };
+  const setPrefs = (o) => { try { localStorage.setItem(KEY + '.logPrefs', JSON.stringify({ ...prefs(), ...o })); } catch (e) {} };
+
+  // Vad appen vet om ögonblicket: väder, ljus, skjuttid, måne
+  function snapshot(t, p) {
+    const out = { wx: null, light: null, inShoot: null, moon: null };
+    if (data && data.h) {
+      const dt = new Date(t), key = hourKey(dt), h = data.h;
+      const i = h.time.findIndex((x) => x.slice(0, 13) === key);
+      if (i >= 0) out.wx = {
+        dir: h.wind_direction_10m[i], spd: h.wind_speed_10m[i], gust: h.wind_gusts_10m && h.wind_gusts_10m[i],
+        temp: h.temperature_2m ? h.temperature_2m[i] : null, code: h.weather_code ? h.weather_code[i] : null, day: h.is_day ? h.is_day[i] : 1
+      };
+    }
+    if (p && SC) {
+      const d = new Date(t), noon = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
+      const s = sunDay(noon, p.lat, p.lon);
+      if (s.polar) out.light = s.polar === 'day' ? 'Midnattssol' : 'Polarnatt';
+      else {
+        const dR = t - s.sunrise, dS = t - s.sunset, lim = 3 * H;
+        if (Math.abs(dS) <= lim && Math.abs(dS) <= Math.abs(dR)) out.light = dS >= 0 ? `${durFmt(dS)} efter solnedgång` : `${durFmt(-dS)} före solnedgång`;
+        else if (Math.abs(dR) <= lim) out.light = dR >= 0 ? `${durFmt(dR)} efter soluppgång` : `${durFmt(-dR)} före soluppgång`;
+        else out.light = t > s.sunrise && t < s.sunset ? 'Dagtid' : 'Mörker';
+        out.inShoot = t >= +s.sunrise - H && t <= +s.sunset + H;
+      }
+      out.moon = moonName(SC.getMoonIllumination(d).phase);
+    }
+    return out;
+  }
+  const wxLine = (e) => {
+    const w = e.wx; if (!w) return '';
+    const parts = [`${dirName(w.dir)} ${Math.round(w.spd)} m/s`];
+    if (w.temp != null) parts.push(fmtT(w.temp));
+    if (w.code != null) parts.push(wxInfo(w.code)[1]);
+    return parts.join(' · ');
+  };
+  function autoText(e) {
+    const parts = [hhmm(e.t), wxLine(e), e.light].filter(Boolean);
+    if (e.lat == null) parts.push('Ingen position');
+    else if (e.acc) parts.push(`±${Math.round(e.acc)} m`);
+    return parts.join(' · ');
+  }
+
+  // ----- Arket -----
+  function openSheet(type, entry) {
+    const now = Date.now();
+    if (entry) draft = JSON.parse(JSON.stringify(entry));
+    else {
+      const pf = prefs();
+      draft = { id: now.toString(36) + Math.random().toString(36).slice(2, 6), t: now, type, art: null, who: [], n: 1,
+        dist: null, weapon: pf.weapon || '', pass: pf.pass && now - (pf.passAt || 0) < 12 * H ? pf.pass : '', note: '', lat: null, lon: null, acc: null };
+      const fresh = pos && Date.now() - posTs < 120000;
+      if (fresh || DEMO) Object.assign(draft, { lat: pos.lat, lon: pos.lon, acc: pos.acc });
+      Object.assign(draft, snapshot(now, fresh || DEMO ? pos : null));
+      if (!DEMO && navigator.geolocation) {
+        const id = draft.id;
+        navigator.geolocation.getCurrentPosition((g) => {
+          if (!draft || draft.id !== id) return;
+          const np = { lat: g.coords.latitude, lon: g.coords.longitude, acc: g.coords.accuracy };
+          if (draft.acc == null || np.acc < draft.acc) {
+            pos = np; posTs = Date.now();
+            Object.assign(draft, np, snapshot(draft.t, np));
+            $('sheetAuto').textContent = autoText(draft);
+          }
+        }, () => { if (draft && draft.id === id && draft.lat == null) $('sheetAuto').textContent = autoText(draft) + '. Kontrollera platstjänster.'; },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+      }
+    }
+    $('sheetDelete').hidden = !entry;
+    $('sheetDelete').textContent = 'Radera';
+    $('sheetMsg').textContent = '';
+    $('fNote').value = draft.note || '';
+    $('fDist').value = draft.dist != null ? draft.dist : '';
+    $('fWeapon').value = draft.weapon || '';
+    $('fPass').value = draft.pass || '';
+    $('moreDetails').open = !!(entry && (draft.dist || draft.pass));
+    $('artAll').hidden = true; $('artMoreBtn').setAttribute('aria-expanded', 'false'); $('artMoreBtn').textContent = 'Visa alla arter';
+    setType(draft.type);
+    $('logSheet').hidden = false;
+    document.body.style.overflow = 'hidden';
+    $('sheetClose').focus();
+  }
+  function closeSheet() { draft = null; $('logSheet').hidden = true; document.body.style.overflow = ''; }
+
+  function setType(t) {
+    draft.type = t;
+    document.querySelectorAll('#logSheet [data-type]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.type === t)));
+    $('sheetTitle').textContent = draft && log.some((e) => e.id === draft.id) ? `Ändra: ${TYPE_NAME[t].toLowerCase()}` : TYPE_TITLE[t];
+    $('artLabel').textContent = t === 'note' ? 'Art (valfritt)' : 'Art';
+    $('noteBlock').querySelector('label').textContent = t === 'note' ? 'Anteckning' : 'Anteckning (valfritt)';
+    $('fWeapon').closest('label').hidden = t !== 'kill';
+    $('sheetAuto').textContent = autoText(draft);
+    renderArtPicker(); renderWho();
+  }
+
+  function recentArts() {
+    const seen = [];
+    log.slice().sort((a, b) => b.t - a.t).forEach((e) => { if (e.art && !seen.includes(e.art)) seen.push(e.art); });
+    DEF_RECENT.forEach((id) => { if (!seen.includes(id)) seen.push(id); });
+    if (draft.art && !seen.slice(0, 6).includes(draft.art)) seen.unshift(draft.art);
+    return seen.slice(0, 6);
+  }
+  function artButton(a) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'art-btn'; b.textContent = a.n;
+    b.setAttribute('aria-pressed', String(draft.art === a.id));
+    b.addEventListener('click', () => {
+      const same = draft.art === a.id;
+      draft.art = same && draft.type === 'note' ? null : a.id;
+      if (!same) draft.who = [];
+      renderArtPicker(); renderWho();
+    });
+    return b;
+  }
+  function renderArtPicker() {
+    const g = $('artRecent'); g.textContent = '';
+    recentArts().forEach((id) => { const a = artById(id); if (a) g.appendChild(artButton(a)); });
+    const all = $('artAll'); all.textContent = '';
+    ['Klövvilt', 'Småvilt', 'Skogsfågel', 'Sjöfågel', 'Övriga fåglar'].forEach((c) => {
+      const h = document.createElement('div'); h.className = 'art-cat'; h.textContent = c; all.appendChild(h);
+      const grid = document.createElement('div'); grid.className = 'art-grid';
+      J.ARTER.filter((a) => a.cat === c).forEach((a) => grid.appendChild(artButton(a)));
+      all.appendChild(grid);
+    });
+  }
+  function renderWho() {
+    const a = draft.art && artById(draft.art);
+    $('whoBlock').hidden = !a || draft.type === 'note';
+    if (!a) return;
+    const box = $('whoChips'); box.textContent = '';
+    a.kon.forEach((k) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip-btn'; b.textContent = k;
+      b.setAttribute('aria-pressed', String(draft.who.includes(k)));
+      b.addEventListener('click', () => {
+        draft.who = draft.who.includes(k) ? draft.who.filter((x) => x !== k) : [...draft.who, k];
+        if (draft.who.length > draft.n) draft.n = draft.who.length;
+        renderWho();
+      });
+      box.appendChild(b);
+    });
+    $('cVal').textContent = draft.n;
+    $('countLabel').textContent = draft.type === 'kill' ? 'Antal fällda' : 'Antal';
+  }
+  $('cMinus').addEventListener('click', () => { draft.n = Math.max(1, draft.n - 1); $('cVal').textContent = draft.n; });
+  $('cPlus').addEventListener('click', () => { draft.n = Math.min(99, draft.n + 1); $('cVal').textContent = draft.n; });
+  $('artMoreBtn').addEventListener('click', () => {
+    const open = $('artAll').hidden;
+    $('artAll').hidden = !open; $('artMoreBtn').setAttribute('aria-expanded', String(open));
+    $('artMoreBtn').textContent = open ? 'Dölj alla arter' : 'Visa alla arter';
+  });
+  document.querySelectorAll('#logSheet [data-type]').forEach((b) => b.addEventListener('click', () => setType(b.dataset.type)));
+  document.querySelectorAll('[data-new]').forEach((b) => b.addEventListener('click', () => openSheet(b.dataset.new)));
+  $('sheetClose').addEventListener('click', closeSheet);
+  $('logSheet').addEventListener('click', (e) => { if (e.target === $('logSheet')) closeSheet(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('logSheet').hidden) closeSheet(); });
+
+  $('sheetSave').addEventListener('click', () => {
+    draft.note = $('fNote').value.trim();
+    const dv = $('fDist').value.trim();
+    draft.dist = dv === '' ? null : Math.max(0, Math.round(+dv));
+    draft.weapon = draft.type === 'kill' ? $('fWeapon').value.trim() : '';
+    draft.pass = $('fPass').value.trim();
+    if (draft.type !== 'note' && !draft.art) { $('sheetMsg').textContent = 'Välj vilken art det gäller.'; return; }
+    if (draft.type === 'note' && !draft.note && !draft.art) { $('sheetMsg').textContent = 'Skriv en anteckning eller välj en art.'; return; }
+    if (draft.type === 'note') { draft.who = []; draft.n = 1; }
+    const i = log.findIndex((e) => e.id === draft.id);
+    if (i >= 0) log[i] = draft; else log.push(draft);
+    if (!saveLog()) { $('sheetMsg').textContent = 'Kunde inte spara. Telefonens lagring kan vara full.'; return; }
+    setPrefs({ pass: draft.pass, passAt: Date.now(), ...(draft.type === 'kill' && draft.weapon ? { weapon: draft.weapon } : {}) });
+    closeSheet(); renderLog();
+  });
+  $('sheetDelete').addEventListener('click', (e) => confirmTap(e.currentTarget, 'Radera', 'Tryck igen', () => {
+    log = log.filter((x) => x.id !== draft.id); saveLog(); closeSheet(); renderLog();
+  }));
+
+  // ----- Tidslinjen -----
+  function dayHeading(t) {
+    const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0);
+    const dd = new Date(d); dd.setHours(0, 0, 0, 0);
+    const diff = Math.round((today - dd) / 864e5);
+    if (diff === 0) return 'Idag';
+    if (diff === 1) return 'Igår';
+    const wd = WD[d.getDay()];
+    return `${wd[0].toUpperCase() + wd.slice(1)} ${d.getDate()} ${MON[d.getMonth()]}${d.getFullYear() !== today.getFullYear() ? ' ' + d.getFullYear() : ''}`;
+  }
+  function entryTitle(e) {
+    const a = e.art && artById(e.art);
+    if (!a) return e.type === 'note' ? (e.note || 'Anteckning') : 'Okänd art';
+    let t = a.n;
+    if (e.who && e.who.length) t += ' · ' + e.who.join(', ');
+    if (e.type !== 'note' && e.n > 1) t += ` · ${e.n} st`;
+    return t;
+  }
+  function renderLog() {
+    const kills = log.filter((e) => e.type === 'kill').reduce((n, e) => n + (e.n || 1), 0);
+    $('loggMeta').innerHTML = log.length ? `${log.length} ${log.length === 1 ? 'post' : 'poster'}<br>${kills} fällt` : '&nbsp;';
+    $('logFilters').hidden = !log.length; $('logExport').hidden = !log.length; $('logEmpty').hidden = !!log.length;
+    document.querySelectorAll('[data-flt]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.flt === logFlt)));
+    const sel = $('logArt');
+    const used = [...new Set(log.map((e) => e.art).filter(Boolean))].map(artById).filter(Boolean).sort((a, b) => a.n.localeCompare(b.n, 'sv'));
+    if (logArtFlt && !used.some((a) => a.id === logArtFlt)) logArtFlt = '';
+    sel.innerHTML = '';
+    [{ id: '', n: 'Alla arter' }, ...used].forEach((a) => { const o = document.createElement('option'); o.value = a.id; o.textContent = a.n; sel.appendChild(o); });
+    sel.value = logArtFlt;
+
+    const list = $('logList'); list.textContent = '';
+    const rows = log.filter((e) => (logFlt === 'all' || e.type === logFlt) && (!logArtFlt || e.art === logArtFlt)).sort((a, b) => b.t - a.t);
+    if (log.length && !rows.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Inga poster matchar filtret.'; list.appendChild(p); return; }
+    let cur = null, sec = null;
+    rows.forEach((e) => {
+      const head = dayHeading(e.t);
+      if (head !== cur) {
+        cur = head; sec = document.createElement('section'); sec.className = 'log-day';
+        const h = document.createElement('h2'); h.textContent = head; sec.appendChild(h); list.appendChild(sec);
+      }
+      const card = document.createElement('button'); card.type = 'button'; card.className = 'entry';
+      const top = document.createElement('div'); top.className = 'e-top';
+      const time = document.createElement('span'); time.textContent = hhmm(e.t);
+      const tag = document.createElement('span'); tag.className = 'e-tag ' + e.type; tag.textContent = TYPE_NAME[e.type];
+      top.append(time, tag);
+      const title = document.createElement('div'); title.className = 'e-title' + (e.type === 'note' && !e.art ? ' e-title-note' : ''); title.textContent = entryTitle(e);
+      card.append(top, title);
+      const l1 = [wxLine(e), e.light].filter(Boolean).join(' · ');
+      if (l1) { const d = document.createElement('div'); d.className = 'e-line'; d.textContent = l1; card.appendChild(d); }
+      const l2 = [e.pass && `Pass: ${e.pass}`, e.dist != null && `${e.dist} m`, e.type === 'kill' && e.weapon, e.type === 'kill' && e.inShoot === false && 'Utanför skjuttid för klövvilt'].filter(Boolean).join(' · ');
+      if (l2) { const d = document.createElement('div'); d.className = 'e-line'; d.textContent = l2; card.appendChild(d); }
+      if (e.note && (e.art || e.type !== 'note')) { const d = document.createElement('div'); d.className = 'e-note'; d.textContent = `”${e.note}”`; card.appendChild(d); }
+      card.setAttribute('aria-label', `${TYPE_NAME[e.type]} ${hhmm(e.t)}: ${entryTitle(e)}. Tryck för att ändra.`);
+      card.addEventListener('click', () => openSheet(e.type, e));
+      sec.appendChild(card);
+    });
+  }
+  document.querySelectorAll('[data-flt]').forEach((b) => b.addEventListener('click', () => { logFlt = b.dataset.flt; renderLog(); }));
+  $('logArt').addEventListener('change', (e) => { logArtFlt = e.target.value; renderLog(); });
+
+  // ----- Export -----
+  function toCsv() {
+    const num = (x, d) => (x == null || isNaN(x) ? '' : (+x).toFixed(d).replace('.', ','));
+    const q = (v) => { const s = v == null ? '' : String(v); return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+    const head = ['Datum', 'Tid', 'Typ', 'Art', 'Kön och ålder', 'Antal', 'Pass', 'Avstånd (m)', 'Vapen', 'Anteckning',
+      'Vind från', 'Vind (m/s)', 'Byar (m/s)', 'Temperatur (°C)', 'Väder', 'Ljus', 'Inom skjuttid klövvilt', 'Måne', 'Latitud', 'Longitud', 'Noggrannhet (m)'];
+    const rows = log.slice().sort((a, b) => a.t - b.t).map((e) => {
+      const d = new Date(e.t), a = e.art && artById(e.art), w = e.wx || {};
+      return [`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, hhmm(e.t), TYPE_NAME[e.type], a ? a.n : '',
+        (e.who || []).join(', '), e.type === 'note' ? '' : e.n, e.pass, e.dist, e.weapon, e.note,
+        w.dir != null ? dirName(w.dir) : '', num(w.spd, 1), num(w.gust, 1), num(w.temp, 1), w.code != null ? wxInfo(w.code)[1] : '',
+        e.light, e.inShoot == null ? '' : (e.inShoot ? 'Ja' : 'Nej'), e.moon, num(e.lat, 6), num(e.lon, 6), e.acc != null ? Math.round(e.acc) : ''].map(q).join(';');
+    });
+    return '﻿' + [head.join(';'), ...rows].join('\r\n');
+  }
+  $('btnExport').addEventListener('click', async () => {
+    const d = new Date();
+    const name = `jaktlogg-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.csv`;
+    const blob = new Blob([toCsv()], { type: 'text/csv;charset=utf-8' });
+    const msg = $('exportMsg'); msg.textContent = '';
+    try {
+      const file = new File([blob], name, { type: 'text/csv' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Jaktlogg' });
+        msg.textContent = 'Exporten är klar.';
+        return;
+      }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    msg.textContent = `Filen ${name} är sparad.`;
+  });
+
   $('refreshBtn').addEventListener('click', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   setInterval(() => { render(); if (page === 'ljus') renderLjus(); }, 60 * 1000);
@@ -1625,7 +2069,7 @@ nav svg { width: 24px; height: 24px; }
   setView(startView);
   let startPage = 'vind';
   try { startPage = localStorage.getItem(KEY + '.page') || 'vind'; } catch (e) {}
-  if (['jakt', 'back', 'ljus'].includes(startPage)) showPage(startPage);
+  if (['jakt', 'back', 'ljus', 'logg'].includes(startPage)) showPage(startPage);
   refresh();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

@@ -212,6 +212,16 @@ window.JAKT = (() => {
     'Hagel: högst 3 patroner (2 i magasinet), hagel högst 4,1 mm (US 1), pipa minst 48 cm.'
   ];
 
+  // Kön och ålder att välja i loggen
+  const TP = ['Tupp', 'Höna'], HH = ['Hane', 'Hona'], VU = ['Vuxen', 'Ungdjur'];
+  const KON = {
+    alg: ['Tjur', 'Ko', 'Kalv'], kronhjort: ['Hjort', 'Hind', 'Kalv'], dovhjort: ['Hjort', 'Hind', 'Kalv'],
+    radjur: ['Bock', 'Get', 'Kid'], vildsvin: ['Galt', 'Sugga', 'Årsunge', 'Kulting'],
+    'tjäder': TP, orre: TP, jarpe: TP, fasan: TP, dalripa: TP, 'fjällripa': TP, rapphona: TP,
+    grasand: HH, kricka: HH, 'bläsand': HH, knipa: HH, storskrake: HH, vigg: HH, sjoorre: HH
+  };
+  ARTER.forEach((a) => { a.kon = KON[a.id] || VU; });
+
   // Rader som gäller för ett län
   function rowsFor(art, lan) {
     const named = {};

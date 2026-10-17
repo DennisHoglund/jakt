@@ -208,6 +208,20 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .hour { background: var(--panel); border-radius: 10px; padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 .hour .hh { font-size: 13px; color: var(--muted); }
 .hour .ms { font-weight: 600; }
+.hour .wx { display: block; height: 32px; margin: -3px 0; }
+.hour .tt { font-weight: 600; font-size: 15px; }
+.hour .sep { width: 60%; height: 1px; background: var(--line); }
+.hour.turn .sep { background: rgba(217, 164, 65, .35); }
+
+.wx-now {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 12px;
+  background: var(--panel); border-radius: 16px; padding: 10px 16px 10px 10px;
+}
+.wx-icon { width: 56px; height: 56px; }
+.wx-temp { font-family: var(--display); font-weight: 700; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
+.wx-desc { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wx-text { font-weight: 600; font-size: 17px; }
+.wx-sub { font-size: 14px; color: var(--muted); }
 .hour svg { width: 20px; height: 20px; }
 .hour.turn { background: var(--accent-bg); }
 .hour.turn .hh, .hour.turn .ms { color: var(--accent); }
@@ -253,6 +267,15 @@ nav svg { width: 24px; height: 24px; }
   </header>
 
   <div class="status" id="status" role="status" aria-live="polite"></div>
+
+  <div class="wx-now" id="wxNow" role="group" hidden>
+    <div class="wx-icon" id="wxIcon"></div>
+    <div class="wx-temp" id="wxTemp"></div>
+    <div class="wx-desc">
+      <div class="wx-text" id="wxText"></div>
+      <div class="wx-sub" id="wxSub"></div>
+    </div>
+  </div>
 
   <div class="seg" role="tablist" aria-label="Visning">
     <button type="button" role="tab" id="segCompass" aria-selected="true">Kompass</button>
@@ -521,7 +544,11 @@ nav svg { width: 24px; height: 24px; }
     const dirs = [225, 225, 225, 230, 260, 275, 300, 315, 315, 320, 320, 320];
     const spd = [4, 4, 4, 4.4, 5, 5.2, 5.8, 6.1, 6, 5.5, 5, 4.8];
     const time = dirs.map((_, i) => { const d = new Date(start.getTime() + i * 36e5); return hourKey(d) + ':00'; });
-    return { demo: true, fetchedAt: Date.now(), h: { time, wind_direction_10m: dirs, wind_speed_10m: spd, wind_gusts_10m: spd.map((s) => s + 3) } };
+    const temp = [6.4, 7.1, 7.8, 8.2, 8.0, 7.4, 6.6, 5.9, 5.2, 4.8, 4.3, 4.0];
+    const code = [2, 2, 3, 3, 61, 63, 80, 3, 2, 1, 0, 0];
+    return { demo: true, fetchedAt: Date.now(), h: { time, wind_direction_10m: dirs, wind_speed_10m: spd, wind_gusts_10m: spd.map((s) => s + 3),
+      temperature_2m: temp, apparent_temperature: temp.map((t) => t - 3), weather_code: code, is_day: code.map(() => 1),
+      precipitation_probability: [5, 10, 20, 40, 70, 80, 60, 30, 10, 5, 0, 0] } };
   }
 
   function getPos() {
@@ -535,7 +562,7 @@ nav svg { width: 24px; height: 24px; }
   async function fetchWind(lat, lon) {
     const url = 'https://api.open-meteo.com/v1/forecast'
       + `?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}`
-      + '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m'
+      + '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,apparent_temperature,weather_code,is_day,precipitation_probability'
       + '&wind_speed_unit=ms&timezone=auto&forecast_days=2';
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 10000);
@@ -569,6 +596,51 @@ nav svg { width: 24px; height: 24px; }
     render();
   }
 
+  // Väder: WMO-koder från Open-Meteo
+  const WX = {
+    0: ['clear', 'Klart'], 1: ['clear', 'Mestadels klart'], 2: ['partly', 'Halvklart'], 3: ['cloudy', 'Mulet'],
+    45: ['fog', 'Dimma'], 48: ['fog', 'Rimfrostdimma'],
+    51: ['drizzle', 'Lätt duggregn'], 53: ['drizzle', 'Duggregn'], 55: ['drizzle', 'Tätt duggregn'],
+    56: ['sleet', 'Underkylt duggregn'], 57: ['sleet', 'Underkylt duggregn'],
+    61: ['rain', 'Lätt regn'], 63: ['rain', 'Regn'], 65: ['rain', 'Kraftigt regn'],
+    66: ['sleet', 'Underkylt regn'], 67: ['sleet', 'Underkylt regn'],
+    71: ['snow', 'Lätt snöfall'], 73: ['snow', 'Snöfall'], 75: ['snow', 'Kraftigt snöfall'], 77: ['snow', 'Snökorn'],
+    80: ['showers', 'Lätta regnskurar'], 81: ['showers', 'Regnskurar'], 82: ['showers', 'Kraftiga regnskurar'],
+    85: ['snow', 'Snöbyar'], 86: ['snow', 'Kraftiga snöbyar'],
+    95: ['thunder', 'Åska'], 96: ['thunder', 'Åska med hagel'], 99: ['thunder', 'Åska med hagel']
+  };
+  const wxInfo = (code) => WX[code] || ['cloudy', 'Okänt väder'];
+  const C_SUN = '#F2C14E', C_CLOUD = '#C9D3CB', C_DARK = '#8E9C92', C_RAIN = '#6FA8DC', C_SNOW = '#FFFFFF';
+  const cloud = (fill, dy = 0) => `<g transform="translate(0 ${dy})" fill="${fill}"><circle cx="11" cy="20" r="5"/><circle cx="17.5" cy="16.5" r="6.5"/><circle cx="23" cy="20.5" r="4.5"/><rect x="11" y="20" width="12" height="5"/></g>`;
+  const sun = (cx, cy, r) => {
+    let rays = '';
+    for (let a = 0; a < 360; a += 45) { const t = (a * Math.PI) / 180; rays += `<line x1="${cx + Math.cos(t) * (r + 2.5)}" y1="${cy + Math.sin(t) * (r + 2.5)}" x2="${cx + Math.cos(t) * (r + 5)}" y2="${cy + Math.sin(t) * (r + 5)}"/>`; }
+    return `<g stroke="${C_SUN}" stroke-width="2" stroke-linecap="round">${rays}</g><circle cx="${cx}" cy="${cy}" r="${r}" fill="${C_SUN}"/>`;
+  };
+  const moon = (tx, ty, sc) => `<path transform="translate(${tx} ${ty}) scale(${sc})" d="M19 5a11 11 0 1 0 8 17A9 9 0 0 1 19 5z" fill="#E8E2C8"/>`;
+  const drops = (n, color, dash) => { let g = ''; for (let k = 0; k < n; k++) { const x = 11 + k * 5; g += `<line x1="${x}" y1="${dash ? 24 : 23.5}" x2="${x - 2}" y2="${dash ? 27 : 29}"/>`; } return `<g stroke="${color}" stroke-width="2" stroke-linecap="round">${g}</g>`; };
+  const flakes = (n) => { let g = ''; for (let k = 0; k < n; k++) g += `<circle cx="${11 + k * 5}" cy="${k % 2 ? 28 : 25.5}" r="1.6"/>`; return `<g fill="${C_SNOW}">${g}</g>`; };
+  function wxIcon(code, isDay, size) {
+    const [kind] = wxInfo(code);
+    const day = isDay !== 0;
+    let body;
+    switch (kind) {
+      case 'clear': body = day ? sun(16, 16, 6.5) : moon(1, 1, 1); break;
+      case 'partly': body = (day ? sun(11, 11, 5) : moon(-1, -2, 0.8)) + `<g transform="translate(2 3)">${cloud(C_CLOUD)}</g>`; break;
+      case 'cloudy': body = `<g transform="translate(-4 -3) scale(0.8)" opacity="0.8">${cloud(C_DARK)}</g>` + cloud(C_CLOUD, 1); break;
+      case 'fog': body = cloud(C_DARK, -5) + `<g stroke="${C_CLOUD}" stroke-width="2" stroke-linecap="round"><line x1="7" y1="24" x2="25" y2="24"/><line x1="10" y1="28" x2="27" y2="28"/></g>`; break;
+      case 'drizzle': body = cloud(C_CLOUD, -5) + drops(3, C_RAIN, true); break;
+      case 'rain': body = cloud(C_DARK, -5) + drops(3, C_RAIN, false); break;
+      case 'showers': body = (day ? sun(11, 8, 4) : moon(-1, -4, 0.7)) + `<g transform="translate(1 0)">${cloud(C_CLOUD, -5)}</g>` + drops(3, C_RAIN, false); break;
+      case 'sleet': body = cloud(C_DARK, -5) + `<g stroke="${C_RAIN}" stroke-width="2" stroke-linecap="round"><line x1="11" y1="23.5" x2="9" y2="29"/><line x1="21" y1="23.5" x2="19" y2="29"/></g><circle cx="16" cy="26.5" r="1.6" fill="${C_SNOW}"/>`; break;
+      case 'snow': body = cloud(C_CLOUD, -5) + flakes(3); break;
+      case 'thunder': body = cloud(C_DARK, -5) + `<path d="M17 19l-4 6h3.5l-2 5 6-7.5h-3.5l2-3.5z" fill="${C_SUN}"/>`; break;
+      default: body = cloud(C_CLOUD);
+    }
+    return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true">${body}</svg>`;
+  }
+  const fmtT = (t) => `${Math.round(t) === 0 ? 0 : Math.round(t)}°`.replace('-', '−');
+
   function arrowSvg(rot) {
     return `<svg viewBox="0 0 20 20" aria-hidden="true" style="transform: rotate(${rot}deg)"><path d="M10 17V3M5 8l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
@@ -592,6 +664,19 @@ nav svg { width: 24px; height: 24px; }
     $('big').textContent = `Från ${dirName(dir)} · ${Math.round(h.wind_speed_10m[i])} m/s`;
     $('sub').textContent = `Byar ${Math.round(h.wind_gusts_10m[i])} m/s · ${Math.round(dir)}°`;
     $('dialSvg').setAttribute('aria-label', `Vinden kommer från ${dirName(dir)}, vittringen drar mot ${dirName(dir + 180)}`);
+    const hasWx = Array.isArray(h.temperature_2m) && h.temperature_2m[i] != null;
+    $('wxNow').hidden = !hasWx;
+    if (hasWx) {
+      const [, label] = wxInfo(h.weather_code[i]);
+      $('wxIcon').innerHTML = wxIcon(h.weather_code[i], h.is_day && h.is_day[i], 56);
+      $('wxTemp').textContent = fmtT(h.temperature_2m[i]);
+      $('wxText').textContent = label;
+      const extra = [];
+      if (h.apparent_temperature) extra.push(`Känns som ${fmtT(h.apparent_temperature[i])}`);
+      if (h.precipitation_probability && h.precipitation_probability[i] != null) extra.push(`Nederbörd ${h.precipitation_probability[i]} %`);
+      $('wxSub').textContent = extra.join(' · ');
+      $('wxNow').setAttribute('aria-label', `${label}, ${Math.round(h.temperature_2m[i])} grader. ${extra.join(', ')}`);
+    }
     updateRel();
 
     list.textContent = '';
@@ -602,8 +687,10 @@ nav svg { width: 24px; height: 24px; }
       if (changed && turn < 0) turn = j;
       const li = document.createElement('li');
       li.className = 'hour' + (changed ? ' turn' : '');
-      li.setAttribute('aria-label', `Kl ${h.time[j].slice(11, 13)}: från ${dirName(d)}, ${s} meter per sekund`);
-      li.innerHTML = `<span class="hh">${h.time[j].slice(11, 13)}</span>${arrowSvg(norm(d + 180))}<span class="ms">${s}</span>`;
+      const wxHtml = hasWx ? `<span class="wx">${wxIcon(h.weather_code[j], h.is_day && h.is_day[j], 32)}</span><span class="tt">${fmtT(h.temperature_2m[j])}</span><span class="sep" aria-hidden="true"></span>` : '';
+      const wxLbl = hasWx ? `${wxInfo(h.weather_code[j])[1].toLowerCase()}, ${Math.round(h.temperature_2m[j])} grader, ` : '';
+      li.setAttribute('aria-label', `Kl ${h.time[j].slice(11, 13)}: ${wxLbl}vind från ${dirName(d)}, ${s} meter per sekund`);
+      li.innerHTML = `<span class="hh">${h.time[j].slice(11, 13)}</span>${wxHtml}${arrowSvg(norm(d + 180))}<span class="ms">${s}</span>`;
       list.appendChild(li);
     }
     const note = $('note');

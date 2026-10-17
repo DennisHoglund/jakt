@@ -1,8 +1,8 @@
 // Jaktvind service worker: appen fungerar offline, prognosen sparas i appen själv.
-const CACHE = 'jaktvind-v14';
+const CACHE = 'jaktvind-v15';
 const TILES = 'jaktvind-tiles';
 const MAX_TILES = 2000;
-const SHELL = ['./', './index.html', './jakttider.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const SHELL = ['./', './index.html', './jakttider.js', './vendor/suncalc.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const TILE_HOSTS = ['tile-cyclosm.openstreetmap.fr', 'tile.waymarkedtrails.org', 'tile.opentopomap.org', 'server.arcgisonline.com', 'tile.openstreetmap.org'];
 
 self.addEventListener('install', (e) => {

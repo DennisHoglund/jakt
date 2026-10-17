@@ -147,6 +147,53 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .chip { display: inline-flex; gap: 6px; align-items: baseline; font-size: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; }
 .chip-l { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .chip.off span:last-child { color: #FF8A73; }
+/* Ljus */
+.day-nav { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 8px; align-items: center; }
+.day-btn, .day-label { min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); display: grid; place-items: center; }
+.day-btn svg { width: 22px; height: 22px; }
+.day-label { font-weight: 600; font-size: 17px; }
+#ljusBody { display: flex; flex-direction: column; gap: 16px; }
+.shoot { background: var(--panel); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.shoot-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.shoot h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--muted); }
+.shoot-times { font-family: var(--display); font-weight: 700; font-size: 46px; line-height: 1; display: flex; gap: 10px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.shoot-times .dash { color: var(--muted); font-weight: 500; }
+.shoot-sub { font-size: 15px; color: var(--fg); }
+.pill.warn { background: var(--accent-bg); color: var(--accent); }
+.pill.off { background: #45201A; color: #FF8A73; }
+
+.dayline { display: flex; flex-direction: column; gap: 6px; }
+.bar { position: relative; height: 28px; border-radius: 8px; overflow: hidden; background: #0C1511; }
+.bar > div { position: absolute; top: 0; bottom: 0; }
+.seg-night { left: 0; right: 0; background: #0C1511; }
+.seg-twi { background: #3B4A63; }
+.seg-day { background: linear-gradient(180deg, #F2C14E, #D9A441); }
+.now { width: 3px; margin-left: -1.5px; background: #FFFFFF; box-shadow: 0 0 0 2px rgba(0,0,0,.45); }
+.shootline { position: relative; height: 6px; }
+.shootline > div { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: #8FD07A; }
+.ticks { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 8px; border-radius: 2px; }
+.k-day { background: #E4B347; } .k-twi { background: #3B4A63; } .k-shoot { background: #8FD07A; }
+
+.sun-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tile { background: var(--panel); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.t-l { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.t-v { font-family: var(--display); font-weight: 700; font-size: 32px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.t-s { font-size: 13px; color: var(--muted); }
+.daylen { font-size: 15px; color: var(--muted); text-align: center; margin-top: -6px; }
+
+.other-shoot { display: flex; flex-direction: column; gap: 4px; }
+.o-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 16px; }
+.o-row b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.o-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+
+.moon { background: var(--panel); border-radius: 16px; padding: 14px 16px; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: center; }
+.moon h2 { margin: 0; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.moon-phase { font-family: var(--display); font-weight: 700; font-size: 24px; }
+.moon-sub { font-size: 14px; color: var(--muted); }
+
 /* Hitta tillbaka */
 .back-empty p { margin: 0; color: var(--muted); font-size: 16px; max-width: 40ch; }
 .back-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -475,6 +522,89 @@ nav svg { width: 24px; height: 24px; }
   <p class="back-note" id="backNote" hidden>Spåret spelas bara in medan appen är öppen och skärmen är tänd. Låser du telefonen blir det ett avbrott i linjen. Slå på "Håll skärmen tänd" för ett obrutet spår.</p>
 </section>
 
+<section class="page" id="pageLjus" hidden aria-labelledby="ljusTitle">
+  <header class="top">
+    <div class="title-row">
+      <button class="menu-btn" type="button" data-menu aria-label="Öppna menyn" aria-controls="drawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div>
+        <div class="eyebrow" id="ljusWhere">Din position</div>
+        <h1 id="ljusTitle">Ljus</h1>
+      </div>
+    </div>
+    <div class="meta" id="ljusMeta">&nbsp;</div>
+  </header>
+
+  <div class="day-nav">
+    <button type="button" class="day-btn" id="dayPrev" aria-label="Föregående dag">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <button type="button" class="day-label" id="dayLabel">Idag</button>
+    <button type="button" class="day-btn" id="dayNext" aria-label="Nästa dag">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <div id="ljusEmpty" class="empty" hidden>Väntar på position. Öppna Vind-sidan en gång så att appen får din position.</div>
+
+  <div id="ljusBody">
+    <section class="shoot" id="shootCard" aria-labelledby="shootTitle">
+      <div class="shoot-head">
+        <h2 id="shootTitle">Skjuttid älg, hjort och rådjur</h2>
+        <span class="pill" id="shootPill"></span>
+      </div>
+      <div class="shoot-times"><span id="shootFrom">–</span><span class="dash" aria-hidden="true">–</span><span id="shootTo">–</span></div>
+      <div class="shoot-sub" id="shootSub">&nbsp;</div>
+    </section>
+
+    <section class="dayline" aria-label="Dygnets ljus">
+      <div class="bar" id="ljusBar">
+        <div class="seg-night"></div>
+        <div class="seg-twi" id="twiAm"></div>
+        <div class="seg-day" id="dayPart"></div>
+        <div class="seg-twi" id="twiPm"></div>
+        <div class="now" id="nowMark" hidden></div>
+      </div>
+      <div class="shootline"><div id="shootBand"></div></div>
+      <div class="ticks" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="k-day"></i>Dagsljus</span><span><i class="k-twi"></i>Gryning/skymning</span><span><i class="k-shoot"></i>Skjuttid</span>
+      </div>
+    </section>
+
+    <section class="sun-grid" aria-label="Solen">
+      <div class="tile"><span class="t-l">Gryning</span><span class="t-v" id="tDawn">–</span><span class="t-s">Det ljusnar</span></div>
+      <div class="tile"><span class="t-l">Soluppgång</span><span class="t-v" id="tRise">–</span><span class="t-s" id="tRiseS">&nbsp;</span></div>
+      <div class="tile"><span class="t-l">Solnedgång</span><span class="t-v" id="tSet">–</span><span class="t-s" id="tSetS">&nbsp;</span></div>
+      <div class="tile"><span class="t-l">Skymning</span><span class="t-v" id="tDusk">–</span><span class="t-s">Det mörknar</span></div>
+    </section>
+    <div class="daylen" id="dayLen">&nbsp;</div>
+
+    <section class="other-shoot" aria-labelledby="otherTitle">
+      <h2 id="otherTitle" class="eyebrow">Skjuttid för andra arter</h2>
+      <div class="o-row"><span>Änder och gäss</span><b id="oDuck">–</b></div>
+      <div class="o-row"><span>Björn</span><b id="oBear">–</b></div>
+      <div class="o-row"><span>Varg, järv och lo</span><b id="oPred">–</b></div>
+      <p class="o-note">Vildsvin, räv, grävling, hare och övriga fåglar har ingen begränsning av tid på dygnet i jaktförordningen.</p>
+    </section>
+
+    <section class="moon" aria-labelledby="moonTitle">
+      <div class="moon-icon" id="moonIcon"></div>
+      <div class="moon-text">
+        <h2 id="moonTitle">Månen</h2>
+        <div class="moon-phase" id="moonPhase">–</div>
+        <div class="moon-sub" id="moonSub">&nbsp;</div>
+      </div>
+    </section>
+
+    <footer class="jakt-foot">
+      <p>Skjuttider enligt jaktförordningen (1987:905) 9 §. Älg, hjort och rådjur samt varg, järv och lo: en timme före soluppgång till en timme efter solnedgång. Under timmen efter solnedgången får jakten bara bedrivas som smyg- eller vaktjakt. Änder och gäss: en timme före soluppgång till en timme efter solnedgång. Björn: en timme före soluppgång till två timmar före solnedgång.</p>
+      <p>Länsstyrelsen kan besluta om undantag. Tiderna räknas ut för din position och gäller där du står.</p>
+    </footer>
+  </div>
+</section>
+
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" aria-label="Meny" hidden>
   <div class="drawer-head">Jaktvind</div>
@@ -484,6 +614,9 @@ nav svg { width: 24px; height: 24px; }
   <button type="button" class="drawer-item" data-page="back">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6"/></svg>Hitta tillbaka
   </button>
+  <button type="button" class="drawer-item" data-page="ljus">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus och skjuttid
+  </button>
   <button type="button" class="drawer-item" data-page="jakt">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Jakttider
   </button>
@@ -491,11 +624,12 @@ nav svg { width: 24px; height: 24px; }
 
 <nav aria-label="Flikar">
   <button type="button" aria-current="page" id="navVind" data-page="vind"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind</button>
-  <button type="button" disabled title="Kommer i steg 2"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus</button>
+  <button type="button" data-page="ljus"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus</button>
   <button type="button" data-page="back"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6"/></svg>Start</button>
   <button type="button" disabled title="Kommer i steg 4"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
 </nav>
 
+<script src="vendor/suncalc.js"></script>
 <script src="jakttider.js"></script>
 <script>
 (() => {
@@ -957,10 +1091,12 @@ nav svg { width: 24px; height: 24px; }
     document.querySelector('main').hidden = p !== 'vind';
     $('pageJakt').hidden = p !== 'jakt';
     $('pageBack').hidden = p !== 'back';
+    $('pageLjus').hidden = p !== 'ljus';
     document.querySelectorAll('.drawer-item, nav [data-page]').forEach((b) => {
       if (b.dataset.page === p) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     if (p === 'jakt') { renderJakt(); detectLan(); }
+    if (p === 'ljus') { dayOff = 0; renderLjus(); }
     if (p === 'back') { updateBack(true); if (trip && trip.state === 'return') setRetView(retView); }
     if (p === 'vind' && !$('mapView').hidden) setTimeout(() => { if (map) { map.invalidateSize(); updateMap(); } }, 0);
     if (p !== 'back') releaseWake();
@@ -972,6 +1108,150 @@ nav svg { width: 24px; height: 24px; }
   $('scrim').addEventListener('click', () => openMenu(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('drawer').hidden) openMenu(false); });
   document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => showPage(b.dataset.page)));
+
+  // ---------- Ljus och skjuttid ----------
+  const SC = window.SunCalc;
+  const WD = ['söndag', 'måndag', 'tisdag', 'onsdag', 'torsdag', 'fredag', 'lördag'];
+  const H = 36e5;
+  let dayOff = 0;
+  const valid = (d) => d instanceof Date && !isNaN(d);
+  const tfmt = (d) => (valid(d) ? hhmm(d) : '–');
+  const durFmt = (ms) => { const m = Math.round(Math.abs(ms) / 60000); return m >= 60 ? `${Math.floor(m / 60)} tim ${m % 60} min` : `${m} min`; };
+
+  function ljusPos() {
+    if (pos) return { lat: pos.lat, lon: pos.lon, src: 'Din position' };
+    if (data && data.lat != null) return { lat: data.lat, lon: data.lon, src: 'Senast kända position' };
+    if (lanAuto && lanAuto.k) { const l = J.LAN.find((x) => x.k === lanAuto.k); if (l) return { lat: l.c[0], lon: l.c[1], src: l.n }; }
+    return null;
+  }
+
+  // Solens tider för ett lokalt datum; hanterar midnattssol och polarnatt
+  function sunDay(date, lat, lon) {
+    const t = SC.getTimes(date, lat, lon);
+    const noonAlt = SC.getPosition(t.solarNoon, lat, lon).altitude;
+    return { ...t, polar: !valid(t.sunrise) || !valid(t.sunset) ? (noonAlt > 0 ? 'day' : 'night') : null };
+  }
+
+  const pct = (d, base) => Math.max(0, Math.min(100, ((d - base) / (24 * H)) * 100));
+  function placeSeg(el, a, b, base) {
+    if (!valid(a) || !valid(b)) { el.style.display = 'none'; return; }
+    el.style.display = ''; el.style.left = pct(a, base) + '%'; el.style.width = Math.max(0, pct(b, base) - pct(a, base)) + '%';
+  }
+
+  function moonIcon(phase, size) {
+    const r = 26, cx = 32, cy = 32;
+    const rx = Math.abs(Math.cos(2 * Math.PI * phase)) * r;
+    let d;
+    if (phase <= 0.5) {
+      const sweep = phase < 0.25 ? 0 : 1;
+      d = `M${cx} ${cy - r} A${r} ${r} 0 0 1 ${cx} ${cy + r} A${rx} ${r} 0 0 ${sweep} ${cx} ${cy - r}Z`;
+    } else {
+      const sweep = phase < 0.75 ? 0 : 1;
+      d = `M${cx} ${cy - r} A${r} ${r} 0 0 0 ${cx} ${cy + r} A${rx} ${r} 0 0 ${sweep} ${cx} ${cy - r}Z`;
+    }
+    return `<svg viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><circle cx="${cx}" cy="${cy}" r="${r}" fill="#24342B" stroke="#3A4E42" stroke-width="1.5"/><path d="${d}" fill="#E8E2C8"/></svg>`;
+  }
+  function moonName(p) {
+    const near = (x) => Math.abs(p - x) < 0.017 || Math.abs(p - x - 1) < 0.017;
+    if (near(0)) return 'Nymåne';
+    if (near(0.25)) return 'Första kvarteret';
+    if (near(0.5)) return 'Fullmåne';
+    if (near(0.75)) return 'Sista kvarteret';
+    if (p < 0.25) return 'Tilltagande skära';
+    if (p < 0.5) return 'Tilltagande måne';
+    if (p < 0.75) return 'Avtagande måne';
+    return 'Avtagande skära';
+  }
+
+  function renderLjus() {
+    if (!SC) return;
+    const lp = ljusPos();
+    $('ljusEmpty').hidden = !!lp; $('ljusBody').hidden = !lp;
+    const now = new Date();
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOff, 12);
+    const base = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0);
+    $('dayLabel').textContent = dayOff === 0 ? 'Idag' : dayOff === 1 ? 'Imorgon' : dayOff === -1 ? 'Igår'
+      : `${WD[date.getDay()][0].toUpperCase() + WD[date.getDay()].slice(1)} ${date.getDate()} ${MON[date.getMonth()]}`;
+    $('ljusMeta').innerHTML = `${WD[date.getDay()]}<br>${date.getDate()} ${MON[date.getMonth()]}`;
+    if (!lp) return;
+    $('ljusWhere').textContent = lp.src;
+
+    const t = sunDay(date, lp.lat, lp.lon);
+    const isToday = dayOff === 0;
+
+    // Dygnsstapeln
+    if (t.polar === 'day') { placeSeg($('dayPart'), base, new Date(+base + 24 * H), base); $('twiAm').style.display = 'none'; $('twiPm').style.display = 'none'; }
+    else if (t.polar === 'night') {
+      $('dayPart').style.display = 'none';
+      placeSeg($('twiAm'), t.dawn, t.dusk, base); $('twiPm').style.display = 'none';
+    } else {
+      placeSeg($('twiAm'), valid(t.dawn) ? t.dawn : base, t.sunrise, base);
+      placeSeg($('dayPart'), t.sunrise, t.sunset, base);
+      placeSeg($('twiPm'), t.sunset, valid(t.dusk) ? t.dusk : new Date(+base + 24 * H), base);
+    }
+    $('nowMark').hidden = !isToday;
+    if (isToday) $('nowMark').style.left = pct(now, base) + '%';
+
+    // Skjuttid älg, hjort, rådjur: 1 h före uppgång till 1 h efter nedgång, sista timmen smyg/vakt
+    const pill = $('shootPill'), sub = $('shootSub');
+    pill.className = 'pill';
+    if (t.polar) {
+      $('shootFrom').textContent = '–'; $('shootTo').textContent = '–';
+      $('shootBand').style.display = 'none';
+      pill.textContent = t.polar === 'day' ? 'Midnattssol' : 'Polarnatt';
+      sub.textContent = t.polar === 'day' ? 'Solen går inte ned. Kontrollera länsstyrelsens regler för skjuttid.' : 'Solen går inte upp. Kontrollera länsstyrelsens regler för skjuttid.';
+      ['oDuck', 'oBear', 'oPred'].forEach((id) => { $(id).textContent = '–'; });
+    } else {
+      const from = new Date(+t.sunrise - H), to = new Date(+t.sunset + H), bearTo = new Date(+t.sunset - 2 * H);
+      $('shootFrom').textContent = hhmm(from); $('shootTo').textContent = hhmm(to);
+      placeSeg($('shootBand'), from, to, base);
+      $('oDuck').textContent = `${hhmm(from)} – ${hhmm(to)}`;
+      $('oBear').textContent = `${hhmm(from)} – ${hhmm(bearTo)}`;
+      $('oPred').textContent = `${hhmm(from)} – ${hhmm(to)}`;
+      if (!isToday) {
+        pill.textContent = dayOff > 0 ? 'Planering' : 'Tidigare dag';
+        sub.textContent = `Sista timmen, ${hhmm(t.sunset)} – ${hhmm(to)}, endast smyg- eller vaktjakt.`;
+      } else if (now < from) {
+        pill.textContent = `Börjar om ${durFmt(from - now)}`; pill.classList.add('warn');
+        sub.textContent = `Sista timmen, ${hhmm(t.sunset)} – ${hhmm(to)}, endast smyg- eller vaktjakt.`;
+      } else if (now < t.sunset) {
+        pill.textContent = 'Skjuttid nu'; pill.classList.add('open');
+        sub.textContent = `${durFmt(t.sunset - now)} kvar till solnedgång. Sista timmen, ${hhmm(t.sunset)} – ${hhmm(to)}, endast smyg- eller vaktjakt.`;
+      } else if (now < to) {
+        pill.textContent = 'Sista timmen'; pill.classList.add('warn');
+        sub.textContent = `Endast smyg- eller vaktjakt. Skjuttiden slutar om ${durFmt(to - now)}.`;
+      } else {
+        const tm = sunDay(new Date(+date + 24 * H), lp.lat, lp.lon);
+        pill.textContent = 'Slut för idag'; pill.classList.add('off');
+        sub.textContent = valid(tm.sunrise) ? `Imorgon börjar skjuttiden ${hhmm(new Date(+tm.sunrise - H))}.` : ' ';
+      }
+    }
+
+    // Soltider
+    $('tDawn').textContent = tfmt(t.dawn); $('tRise').textContent = tfmt(t.sunrise);
+    $('tSet').textContent = tfmt(t.sunset); $('tDusk').textContent = tfmt(t.dusk);
+    $('tRiseS').textContent = valid(t.sunrise) ? `Skjuttid från ${hhmm(new Date(+t.sunrise - H))}` : (t.polar === 'day' ? 'Midnattssol' : 'Solen går inte upp');
+    $('tSetS').textContent = valid(t.sunset) ? `Skjuttid till ${hhmm(new Date(+t.sunset + H))}` : (t.polar === 'day' ? 'Midnattssol' : 'Solen går inte upp');
+    if (!t.polar) {
+      const len = t.sunset - t.sunrise;
+      const y = sunDay(new Date(+date - 24 * H), lp.lat, lp.lon);
+      let diff = '';
+      if (!y.polar) { const dm = Math.round((len - (y.sunset - y.sunrise)) / 60000); diff = dm === 0 ? ', lika lång som igår' : `, ${Math.abs(dm)} min ${dm > 0 ? 'längre' : 'kortare'} än igår`; }
+      $('dayLen').textContent = `Dagen är ${durFmt(len)}${diff}`;
+    } else $('dayLen').textContent = t.polar === 'day' ? 'Solen är uppe hela dygnet' : 'Solen går inte upp idag';
+
+    // Månen
+    const mi = SC.getMoonIllumination(isToday ? now : date);
+    const mt = SC.getMoonTimes(date, lp.lat, lp.lon);
+    $('moonIcon').innerHTML = moonIcon(mi.phase, 64);
+    $('moonPhase').textContent = moonName(mi.phase);
+    const times = mt.alwaysUp ? 'Uppe hela dygnet' : mt.alwaysDown ? 'Inte uppe idag'
+      : [mt.rise && `Upp ${hhmm(mt.rise)}`, mt.set && `Ned ${hhmm(mt.set)}`].filter(Boolean).join(' · ');
+    $('moonSub').textContent = `${Math.round(mi.fraction * 100)} % belyst${times ? ' · ' + times : ''}`;
+  }
+  $('dayPrev').addEventListener('click', () => { dayOff--; renderLjus(); });
+  $('dayNext').addEventListener('click', () => { dayOff++; renderLjus(); });
+  $('dayLabel').addEventListener('click', () => { dayOff = 0; renderLjus(); });
 
   // ---------- Hitta tillbaka ----------
   const rad = (d) => (d * Math.PI) / 180;
@@ -1335,7 +1615,7 @@ nav svg { width: 24px; height: 24px; }
 
   $('refreshBtn').addEventListener('click', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
-  setInterval(render, 60 * 1000);
+  setInterval(() => { render(); if (page === 'ljus') renderLjus(); }, 60 * 1000);
 
   data = DEMO ? null : load();
   if (data && data.lat != null) pos = { lat: data.lat, lon: data.lon, acc: 50 };
@@ -1345,7 +1625,7 @@ nav svg { width: 24px; height: 24px; }
   setView(startView);
   let startPage = 'vind';
   try { startPage = localStorage.getItem(KEY + '.page') || 'vind'; } catch (e) {}
-  if (startPage === 'jakt' || startPage === 'back') showPage(startPage);
+  if (['jakt', 'back', 'ljus'].includes(startPage)) showPage(startPage);
   refresh();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

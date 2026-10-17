@@ -862,7 +862,7 @@ nav svg { width: 24px; height: 24px; }
   <button type="button" class="drawer-item" data-page="jakt">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Jakttider
   </button>
-  <div class="drawer-ver" id="appVer">Version 20</div>
+  <div class="drawer-ver" id="appVer">Version 21</div>
 </aside>
 
 <nav aria-label="Flikar">
@@ -2274,7 +2274,7 @@ nav svg { width: 24px; height: 24px; }
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storage: authStorage, storageKey: AUTH_KEY,
       lock: (_n, _t, fn) => fn() } // hoppa över låset, som kan hänga i iOS hemskärmsappar
   }) : null;
-  let sbUser = null, syncing = false, syncErr = '', lastSync = 0;
+  let sbUser = null, syncing = false, syncErr = '', lastSync = 0, cloudCount = null;
   let queue = {};
   try { queue = JSON.parse(localStorage.getItem(KEY + '.logQ')) || {}; } catch (e) { queue = {}; }
   const saveQueue = () => { try { localStorage.setItem(KEY + '.logQ', JSON.stringify(queue)); } catch (e) {} };
@@ -2315,7 +2315,13 @@ nav svg { width: 24px; height: 24px; }
       // Köposter för id som inte längre finns lokalt och inte är raderingar
       Object.keys(queue).forEach((id) => { if (queue[id] === 'up' && !log.some((e) => e.id === id)) delete queue[id]; });
       saveQueue(); saveLog(); syncErr = ''; lastSync = Date.now();
-    } catch (e) { syncErr = navigator.onLine ? 'Kunde inte synka. Försöker igen senare.' : ''; }
+      if (cloudCount != null) cloudCount = log.filter((e) => e._s).length;
+    } catch (e) {
+      console.warn('flush', e);
+      const m = (e && (e.message || e.code)) || '';
+      syncErr = !navigator.onLine ? '' : /relation|does not exist|PGRST205/i.test(m) ? 'Tabellen logg saknas i Supabase. Kör supabase/schema.sql.'
+        : /row-level security|42501|permission/i.test(m) ? 'Supabase nekade skrivning (RLS). Kontrollera schema.sql.' : 'Kunde inte synka. Försöker igen senare.';
+    }
     syncing = false; renderSyncBar();
   }
 
@@ -2335,9 +2341,9 @@ nav svg { width: 24px; height: 24px; }
         // annars: raderad i molnet
       });
       server.forEach((r, id) => { if (!next.some((e) => e.id === id) && queue[id] !== 'del') next.push(fromRow(r)); });
-      log = next; saveLog(); saveQueue(); syncErr = ''; lastSync = Date.now();
+      log = next; saveLog(); saveQueue(); syncErr = ''; lastSync = Date.now(); cloudCount = data.length;
       if (page === 'logg') renderLog();
-    } catch (e) { syncErr = 'Kunde inte hämta loggen från molnet.'; }
+    } catch (e) { syncErr = /relation|does not exist|PGRST205|404/i.test((e && (e.message || e.code)) || '') ? 'Tabellen logg saknas i Supabase. Kör supabase/schema.sql.' : 'Kunde inte hämta loggen från molnet.'; console.warn('pull', e); }
     await flushSync();
   }
 
@@ -2367,10 +2373,12 @@ nav svg { width: 24px; height: 24px; }
       if (syncErr) txt.textContent = syncErr;
       return;
     }
+    if (syncErr) { dot.className = 'sync-dot wait'; txt.textContent = syncErr; return; }
     dot.className = 'sync-dot ok';
     txt.innerHTML = '';
     const b = document.createElement('b'); b.textContent = 'Sparad i molnet';
-    txt.append(b, document.createTextNode(` · ${sbUser.email || ''}`));
+    const n = cloudCount == null ? '' : ` · ${cloudCount} ${cloudCount === 1 ? 'post' : 'poster'}`;
+    txt.append(b, document.createTextNode(`${n} · ${sbUser.email || ''}`));
   }
 
   function openLogin() {

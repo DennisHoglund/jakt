@@ -2318,8 +2318,8 @@ nav svg { width: 24px; height: 24px; }
       if (cloudCount != null) cloudCount = log.filter((e) => e._s).length;
     } catch (e) {
       console.warn('flush', e);
-      const m = (e && (e.message || e.code)) || '';
-      syncErr = !navigator.onLine ? '' : /relation|does not exist|PGRST205/i.test(m) ? 'Tabellen logg saknas i Supabase. Kör supabase/schema.sql.'
+      const m = e ? `${e.message || ''} ${e.code || ''}` : '';
+      syncErr = !navigator.onLine ? '' : /relation|does not exist|could not find the table|PGRST205|42P01/i.test(m) ? 'Tabellen logg saknas i Supabase. Kör supabase/schema.sql.'
         : /row-level security|42501|permission/i.test(m) ? 'Supabase nekade skrivning (RLS). Kontrollera schema.sql.' : 'Kunde inte synka. Försöker igen senare.';
     }
     syncing = false; renderSyncBar();
@@ -2343,7 +2343,7 @@ nav svg { width: 24px; height: 24px; }
       server.forEach((r, id) => { if (!next.some((e) => e.id === id) && queue[id] !== 'del') next.push(fromRow(r)); });
       log = next; saveLog(); saveQueue(); syncErr = ''; lastSync = Date.now(); cloudCount = data.length;
       if (page === 'logg') renderLog();
-    } catch (e) { syncErr = /relation|does not exist|PGRST205|404/i.test((e && (e.message || e.code)) || '') ? 'Tabellen logg saknas i Supabase. Kör supabase/schema.sql.' : 'Kunde inte hämta loggen från molnet.'; console.warn('pull', e); }
+    } catch (e) { syncErr = /relation|does not exist|could not find the table|PGRST205|42P01/i.test(e ? `${e.message || ''} ${e.code || ''}` : '') ? 'Tabellen logg saknas i Supabase. Kör supabase/schema.sql.' : 'Kunde inte hämta loggen från molnet.'; console.warn('pull', e); }
     await flushSync();
   }
 

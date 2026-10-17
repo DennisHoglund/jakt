@@ -220,6 +220,22 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .e-line { font-size: 14px; color: var(--muted); }
 .e-note { font-size: 15px; font-style: italic; }
 .e-title-note { font-family: var(--body); font-weight: 600; font-size: 17px; }
+.log-mapview { height: min(460px, 58dvh); }
+.map-legend em { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid #fff; }
+.dot-obs { background: #4FA868; } .dot-kill { background: #D9A441; } .dot-note { background: #8E9C92; }
+.log-pin { background: none; border: 0; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel); color: var(--fg); box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+.leaflet-popup-content { margin: 12px 14px; font-family: var(--body); font-size: 14px; line-height: 1.35; }
+.leaflet-container a.leaflet-popup-close-button { color: var(--muted); width: 32px; height: 32px; font-size: 22px; }
+.pop-t { font-family: var(--display); font-weight: 700; font-size: 19px; margin: 2px 0; }
+.pop-m { color: var(--muted); font-size: 13px; }
+.pop-btn { margin-top: 8px; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font-weight: 600; }
+.place-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.place-text { font-size: 15px; }
+.place-map-wrap { display: flex; flex-direction: column; gap: 6px; }
+.place-map { height: 260px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--bg); }
+.place-actions { display: flex; flex-direction: column; gap: 2px; }
+.place-hint { font-size: 13px; color: var(--muted); }
 .log-export { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 
 .sheet-wrap { position: fixed; inset: 0; z-index: 1100; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; }
@@ -698,6 +714,19 @@ nav svg { width: 24px; height: 24px; }
     <select id="logArt"></select>
   </div>
 
+  <div class="seg" role="tablist" aria-label="Visa loggen som" id="logViewSeg" hidden>
+    <button type="button" role="tab" id="lvList" aria-selected="true">Lista</button>
+    <button type="button" role="tab" id="lvMap" aria-selected="false">Karta</button>
+  </div>
+  <div class="mapview log-mapview" id="logMapView" hidden>
+    <div id="logMap" class="map-el"></div>
+    <div class="map-legend">
+      <div><em class="dot-obs"></em>Sett</div>
+      <div><em class="dot-kill"></em>Fällt</div>
+      <div><em class="dot-note"></em>Anteckning</div>
+    </div>
+    <p class="map-msg" id="logMapMsg"></p>
+  </div>
   <div id="logList"></div>
   <p class="empty" id="logEmpty">Inga poster än. Tryck <b>+ Sett</b> eller <b>+ Fällt</b> ute i skogen. Tid, plats, vind, väder och ljus sparas automatiskt.</p>
 
@@ -721,6 +750,22 @@ nav svg { width: 24px; height: 24px; }
         <button type="button" role="tab" data-type="note" aria-selected="false">Anteckning</button>
       </div>
       <div class="auto" id="sheetAuto">&nbsp;</div>
+      <div class="f-block place-block">
+        <div class="place-row">
+          <div>
+            <div class="eyebrow">Plats</div>
+            <div class="place-text" id="placeText">Där du står</div>
+          </div>
+          <button type="button" class="chip-btn" id="placeBtn" aria-expanded="false">Placera på kartan</button>
+        </div>
+        <div class="place-map-wrap" id="placeWrap" hidden>
+          <div id="placeMap" class="place-map"></div>
+          <div class="place-actions">
+            <span class="place-hint">Tryck på kartan där djuret var, eller dra nålen.</span>
+            <button type="button" class="link-btn" id="placeReset">Återställ till min position</button>
+          </div>
+        </div>
+      </div>
 
       <div class="f-block" id="artBlock">
         <div class="eyebrow" id="artLabel">Art</div>
@@ -1091,7 +1136,7 @@ nav svg { width: 24px; height: 24px; }
 
   function initMap() {
     if (typeof L === 'undefined') { $('mapMsg').textContent = 'Kartan kunde inte laddas. Öppna appen med täckning en gång så sparas den.'; return false; }
-    map = L.map('map', { zoomControl: false, maxZoom: 20 });
+    map = L.map('map', { zoomControl: false, keyboard: false, maxZoom: 20 });
     const { layers, overlays } = makeLayers();
     let chosen = 'Stigar';
     try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
@@ -1582,7 +1627,7 @@ nav svg { width: 24px; height: 24px; }
 
   function initBackMap() {
     if (typeof L === 'undefined') { $('backHint').textContent = 'Kartan kunde inte laddas. Använd kompassen.'; return false; }
-    bmap = L.map('backMap', { zoomControl: false, maxZoom: 20 });
+    bmap = L.map('backMap', { zoomControl: false, keyboard: false, maxZoom: 20 });
     const { layers, overlays } = makeLayers();
     let chosen = 'Stigar';
     try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
@@ -1824,11 +1869,17 @@ nav svg { width: 24px; height: 24px; }
     return parts.join(' · ');
   };
   function autoText(e) {
-    const parts = [hhmm(e.t), wxLine(e), e.light].filter(Boolean);
-    if (e.lat == null) parts.push('Ingen position');
-    else if (e.acc) parts.push(`±${Math.round(e.acc)} m`);
-    return parts.join(' · ');
+    return [hhmm(e.t), wxLine(e), e.light].filter(Boolean).join(' · ');
   }
+  function placeText(e) {
+    if (e.lat == null) return 'Söker position…';
+    if (e.placed) {
+      const ref = e.me || (pos && { lat: pos.lat, lon: pos.lon });
+      return ref ? `Placerad på kartan, ${fmtDist(distBearing(ref, e).d)} från dig` : 'Placerad på kartan';
+    }
+    return e.acc ? `Där du står, ±${Math.round(e.acc)} m` : 'Där du står';
+  }
+  function updatePlaceUi() { if (draft) $('placeText').textContent = placeText(draft); }
 
   // ----- Arket -----
   function openSheet(type, entry) {
@@ -1846,12 +1897,16 @@ nav svg { width: 24px; height: 24px; }
         navigator.geolocation.getCurrentPosition((g) => {
           if (!draft || draft.id !== id) return;
           const np = { lat: g.coords.latitude, lon: g.coords.longitude, acc: g.coords.accuracy };
-          if (draft.acc == null || np.acc < draft.acc) {
-            pos = np; posTs = Date.now();
+          pos = np; posTs = Date.now();
+          if (draft.placed) { draft.me = { lat: np.lat, lon: np.lon }; }
+          else if (draft.acc == null || np.acc < draft.acc) {
             Object.assign(draft, np, snapshot(draft.t, np));
             $('sheetAuto').textContent = autoText(draft);
+            if (pMarker) pMarker.setLatLng([np.lat, np.lon]);
           }
-        }, () => { if (draft && draft.id === id && draft.lat == null) $('sheetAuto').textContent = autoText(draft) + '. Kontrollera platstjänster.'; },
+          if (pMe) pMe.setLatLng([np.lat, np.lon]);
+          updatePlaceUi();
+        }, () => { if (draft && draft.id === id && draft.lat == null) $('placeText').textContent = 'Ingen position. Kontrollera platstjänster eller placera på kartan.'; },
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
       }
     }
@@ -1864,12 +1919,69 @@ nav svg { width: 24px; height: 24px; }
     $('fPass').value = draft.pass || '';
     $('moreDetails').open = !!(entry && (draft.dist || draft.pass));
     $('artAll').hidden = true; $('artMoreBtn').setAttribute('aria-expanded', 'false'); $('artMoreBtn').textContent = 'Visa alla arter';
+    $('placeWrap').hidden = true; $('placeBtn').setAttribute('aria-expanded', 'false'); $('placeBtn').textContent = draft.placed ? 'Flytta på kartan' : 'Placera på kartan';
+    updatePlaceUi();
     setType(draft.type);
     $('logSheet').hidden = false;
     document.body.style.overflow = 'hidden';
     $('sheetClose').focus();
   }
   function closeSheet() { draft = null; $('logSheet').hidden = true; document.body.style.overflow = ''; }
+
+  const PIN = (color) => `<svg viewBox="0 0 28 38" width="28" height="38" aria-hidden="true"><path d="M14 37s11-12.6 11-22A11 11 0 0 0 3 15c0 9.4 11 22 11 22z" fill="${color}" stroke="#FFF" stroke-width="2"/><circle cx="14" cy="15" r="4.2" fill="#FFF"/></svg>`;
+  const PIN_COLOR = { obs: '#4FA868', kill: '#D9A441', note: '#8E9C92' };
+  const pinIcon = (type) => L.divIcon({ className: 'log-pin', html: PIN(PIN_COLOR[type] || PIN_COLOR.note), iconSize: [28, 38], iconAnchor: [14, 37], popupAnchor: [0, -34] });
+  let pmap = null, pMarker = null, pMe = null;
+
+  function setDraftPlace(ll) {
+    if (!draft.placed) draft.me = draft.lat != null && !draft.me ? { lat: draft.lat, lon: draft.lon } : (draft.me || (pos ? { lat: pos.lat, lon: pos.lon } : null));
+    draft.lat = +ll.lat.toFixed(6); draft.lon = +ll.lng.toFixed(6); draft.acc = null; draft.placed = true;
+    pMarker.setLatLng(ll);
+    // Avstånd från där du stod, om fältet är tomt
+    if (draft.me && $('fDist').value.trim() === '' && draft.type !== 'note') {
+      $('fDist').value = Math.round(distBearing(draft.me, draft).d);
+    }
+    $('placeBtn').textContent = 'Flytta på kartan';
+    updatePlaceUi();
+  }
+  function openPlaceMap() {
+    if (typeof L === 'undefined') { $('placeText').textContent = 'Kartan kunde inte laddas.'; return; }
+    $('placeWrap').hidden = false; $('placeBtn').setAttribute('aria-expanded', 'true');
+    const center = draft.lat != null ? [draft.lat, draft.lon] : pos ? [pos.lat, pos.lon] : [62.5, 16];
+    if (!pmap) {
+      pmap = L.map('placeMap', { zoomControl: false, keyboard: false, maxZoom: 20 });
+      const { layers } = makeLayers();
+      let chosen = 'Stigar';
+      try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
+      (layers[chosen] || layers['Stigar']).addTo(pmap);
+      L.control.layers(layers, null, { position: 'topright' }).addTo(pmap);
+      pMarker = L.marker(center, { icon: pinIcon(draft.type), draggable: true, keyboard: false }).addTo(pmap);
+      pMarker.on('dragend', () => setDraftPlace(pMarker.getLatLng()));
+      pmap.on('click', (e) => setDraftPlace(e.latlng));
+    } else {
+      pMarker.setLatLng(center);
+    }
+    pMarker.setIcon(pinIcon(draft.type));
+    const me = draft.me || (draft.placed ? null : (draft.lat != null ? draft : null)) || pos;
+    if (me) {
+      if (!pMe) pMe = L.circleMarker([me.lat, me.lon], { radius: 7, color: '#FFFFFF', weight: 2, fillColor: '#E07A3F', fillOpacity: 1, interactive: false }).addTo(pmap);
+      else pMe.setLatLng([me.lat, me.lon]);
+    }
+    setTimeout(() => { pmap.invalidateSize(); pmap.setView(center, draft.lat != null ? 17 : 5); }, 0);
+  }
+  $('placeBtn').addEventListener('click', () => {
+    if ($('placeWrap').hidden) openPlaceMap();
+    else { $('placeWrap').hidden = true; $('placeBtn').setAttribute('aria-expanded', 'false'); }
+  });
+  $('placeReset').addEventListener('click', () => {
+    const me = draft.me || (pos && { lat: pos.lat, lon: pos.lon });
+    if (!me) return;
+    draft.lat = me.lat; draft.lon = me.lon; draft.placed = false; delete draft.me;
+    draft.acc = pos ? pos.acc : null;
+    if (pMarker) { pMarker.setLatLng([me.lat, me.lon]); pmap.panTo([me.lat, me.lon]); }
+    $('placeBtn').textContent = 'Placera på kartan';
+    updatePlaceUi();
+  });
 
   function setType(t) {
     draft.type = t;
@@ -1879,6 +1991,7 @@ nav svg { width: 24px; height: 24px; }
     $('noteBlock').querySelector('label').textContent = t === 'note' ? 'Anteckning' : 'Anteckning (valfritt)';
     $('fWeapon').closest('label').hidden = t !== 'kill';
     $('sheetAuto').textContent = autoText(draft);
+    if (pMarker) pMarker.setIcon(pinIcon(t));
     renderArtPicker(); renderWho();
   }
 
@@ -1995,6 +2108,12 @@ nav svg { width: 24px; height: 24px; }
 
     const list = $('logList'); list.textContent = '';
     const rows = log.filter((e) => (logFlt === 'all' || e.type === logFlt) && (!logArtFlt || e.art === logArtFlt)).sort((a, b) => b.t - a.t);
+    $('logViewSeg').hidden = !log.length;
+    $('lvList').setAttribute('aria-selected', String(logView === 'list'));
+    $('lvMap').setAttribute('aria-selected', String(logView === 'map'));
+    const showMap = logView === 'map' && log.length > 0;
+    $('logMapView').hidden = !showMap; list.hidden = showMap;
+    if (showMap) { renderLogMap(rows); return; }
     if (log.length && !rows.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Inga poster matchar filtret.'; list.appendChild(p); return; }
     let cur = null, sec = null;
     rows.forEach((e) => {
@@ -2022,6 +2141,61 @@ nav svg { width: 24px; height: 24px; }
   }
   document.querySelectorAll('[data-flt]').forEach((b) => b.addEventListener('click', () => { logFlt = b.dataset.flt; renderLog(); }));
   $('logArt').addEventListener('change', (e) => { logArtFlt = e.target.value; renderLog(); });
+
+  let logView = 'list', lmap = null, lLayer = null, lMe = null;
+  try { logView = localStorage.getItem(KEY + '.logView') || 'list'; } catch (e) {}
+  function setLogView(v) {
+    logView = v;
+    try { localStorage.setItem(KEY + '.logView', v); } catch (e) {}
+    renderLog();
+  }
+  $('lvList').addEventListener('click', () => setLogView('list'));
+  $('lvMap').addEventListener('click', () => setLogView('map'));
+
+  function renderLogMap(rows) {
+    if (typeof L === 'undefined') { $('logMapMsg').textContent = 'Kartan kunde inte laddas.'; return; }
+    if (!lmap) {
+      lmap = L.map('logMap', { zoomControl: false, keyboard: false, maxZoom: 20 });
+      const { layers, overlays } = makeLayers();
+      let chosen = 'Stigar';
+      try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
+      (layers[chosen] || layers['Stigar']).addTo(lmap);
+      L.control.layers(layers, overlays, { position: 'topright' }).addTo(lmap);
+      lmap.on('baselayerchange', (e) => { try { localStorage.setItem(KEY + '.layer2', e.name); } catch (_) {} });
+      lLayer = L.layerGroup().addTo(lmap);
+      lmap.setView([62.5, 16], 5);
+    }
+    lLayer.clearLayers();
+    const pts = [];
+    rows.filter((e) => e.lat != null).forEach((e) => {
+      const m = L.marker([e.lat, e.lon], { icon: pinIcon(e.type), keyboard: false, title: entryTitle(e) }).addTo(lLayer);
+      const box = document.createElement('div');
+      const meta = document.createElement('div'); meta.className = 'pop-m'; meta.textContent = `${dayHeading(e.t)} ${hhmm(e.t)} · ${TYPE_NAME[e.type]}`;
+      const t = document.createElement('div'); t.className = 'pop-t'; t.textContent = entryTitle(e);
+      box.append(meta, t);
+      const l = [wxLine(e), e.light].filter(Boolean).join(' · ');
+      if (l) { const d = document.createElement('div'); d.className = 'pop-m'; d.textContent = l; box.appendChild(d); }
+      if (e.note && (e.art || e.type !== 'note')) { const d = document.createElement('div'); d.textContent = `”${e.note}”`; box.appendChild(d); }
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pop-btn'; b.textContent = 'Ändra';
+      b.addEventListener('click', () => { lmap.closePopup(); openSheet(e.type, e); });
+      box.appendChild(b);
+      m.bindPopup(box, { maxWidth: 260 });
+      pts.push([e.lat, e.lon]);
+    });
+    if (pos) {
+      if (!lMe) lMe = L.circleMarker([pos.lat, pos.lon], { radius: 7, color: '#FFFFFF', weight: 2, fillColor: '#E07A3F', fillOpacity: 1, interactive: false }).addTo(lmap);
+      else lMe.setLatLng([pos.lat, pos.lon]);
+    }
+    const missing = rows.length - pts.length;
+    $('logMapMsg').textContent = !pts.length ? 'Inga poster med position att visa.' : '';
+    $('logMapMsg').hidden = !!pts.length;
+    setTimeout(() => {
+      lmap.invalidateSize();
+      if (pts.length === 1) lmap.setView(pts[0], 16);
+      else if (pts.length) lmap.fitBounds(pts, { padding: [40, 40], maxZoom: 17 });
+    }, 0);
+    return missing;
+  }
 
   // ----- Export -----
   function toCsv() {

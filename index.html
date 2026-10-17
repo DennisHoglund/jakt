@@ -862,7 +862,7 @@ nav svg { width: 24px; height: 24px; }
   <button type="button" class="drawer-item" data-page="jakt">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Jakttider
   </button>
-  <div class="drawer-ver" id="appVer">Version 19</div>
+  <div class="drawer-ver" id="appVer">Version 20</div>
 </aside>
 
 <nav aria-label="Flikar">
@@ -2476,7 +2476,16 @@ nav svg { width: 24px; height: 24px; }
   refresh();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Ladda om automatiskt när en ny version tar över, så uppdateringar syns direkt
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hadController && !reloaded && !(draft) && $('loginSheet').hidden) { reloaded = true; location.reload(); }
+    });
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+      // Leta efter ny version varje gång appen öppnas igen
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => {});
   }
 })();
 </script>

@@ -1,12 +1,13 @@
 // Jaktvind service worker: appen fungerar offline, prognosen sparas i appen själv.
-const CACHE = 'jaktvind-v19';
+const CACHE = 'jaktvind-v20';
 const TILES = 'jaktvind-tiles';
 const MAX_TILES = 2000;
 const SHELL = ['./', './index.html', './config.js', './jakttider.js', './vendor/suncalc.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const TILE_HOSTS = ['tile-cyclosm.openstreetmap.fr', 'tile.waymarkedtrails.org', 'tile.opentopomap.org', 'server.arcgisonline.com', 'tile.openstreetmap.org'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));
+  // cache: 'reload' hämtar färska filer och går förbi webbläsarens HTTP-cache
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))));
   self.skipWaiting();
 });
 
@@ -45,8 +46,9 @@ self.addEventListener('fetch', (e) => {
   // Egna filer: nätet först så uppdateringar slår igenom, cache som reserv.
   if (url.origin === self.location.origin) {
     e.respondWith(
-      fetch(e.request)
-        .then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); return res; })
+      // no-cache: fråga alltid servern om filen ändrats (GitHub Pages låter annars webbläsaren spara den i 10 min)
+      fetch(e.request, { cache: 'no-cache' })
+        .then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); } return res; })
         .catch(() => caches.match(e.request).then((r) => r || caches.match('./index.html')))
     );
     return;

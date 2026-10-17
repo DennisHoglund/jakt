@@ -1,8 +1,8 @@
 // Jaktvind service worker: appen fungerar offline, prognosen sparas i appen själv.
-const CACHE = 'jaktvind-v17';
+const CACHE = 'jaktvind-v18';
 const TILES = 'jaktvind-tiles';
 const MAX_TILES = 2000;
-const SHELL = ['./', './index.html', './jakttider.js', './vendor/suncalc.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const SHELL = ['./', './index.html', './config.js', './jakttider.js', './vendor/suncalc.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const TILE_HOSTS = ['tile-cyclosm.openstreetmap.fr', 'tile.waymarkedtrails.org', 'tile.opentopomap.org', 'server.arcgisonline.com', 'tile.openstreetmap.org'];
 
 self.addEventListener('install', (e) => {
@@ -59,7 +59,7 @@ self.addEventListener('fetch', (e) => {
   }
 
   // Typsnitt och kartbibliotek: cache först.
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || url.hostname === 'cdnjs.cloudflare.com') {
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || url.hostname === 'cdnjs.cloudflare.com' || url.hostname === 'cdn.jsdelivr.net') {
     e.respondWith(cacheFirst(e.request, CACHE));
   }
 });

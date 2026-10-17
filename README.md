@@ -20,3 +20,15 @@ Steg 1 av jaktappen: vindriktning, vindstyrka, byar och vittring för din positi
 3. Starta från ikonen, tillåt plats och tryck "Aktivera kompass".
 
 Platstjänster och kompass kräver https, så appen fungerar inte om du öppnar filen direkt från disk.
+
+## Molnsynk av loggen (Supabase)
+
+Loggen sparas alltid i telefonen först och skickas till Supabase när du är inloggad och har täckning.
+
+Engångsinställning i Supabase-projektet:
+1. **SQL Editor → New query**: klistra in `supabase/schema.sql` och tryck **Run**.
+2. **Authentication → Users → Add user → Create new user**: e-post och lösenord, kryssa i *Auto Confirm User*.
+3. **Authentication → Sign In / Providers**: stäng av *Allow new users to sign up*.
+
+Projektets URL och publika nyckel ligger i `config.js`. Den publika nyckeln får ligga öppet: RLS gör att
+bara inloggade användare kommer åt data, och var och en bara sina egna poster.

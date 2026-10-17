@@ -272,6 +272,14 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .more-grid { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
 .more-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 
+/* Molnsynk */
+.sync-bar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; background: var(--panel); border-radius: 12px; padding: 8px 8px 8px 14px; }
+.sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.sync-dot.ok { background: #8FD07A; } .sync-dot.wait { background: var(--accent); } .sync-dot.off { background: #8E9C92; }
+.sync-text { font-size: 14px; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.sync-text b { color: var(--fg); font-weight: 600; }
+.more-grid input[type=email], .more-grid input[type=password] { font-size: 17px; }
+
 /* Hitta tillbaka */
 .back-empty p { margin: 0; color: var(--muted); font-size: 16px; max-width: 40ch; }
 .back-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -697,6 +705,12 @@ nav svg { width: 24px; height: 24px; }
     <div class="meta" id="loggMeta">&nbsp;</div>
   </header>
 
+  <div class="sync-bar" id="syncBar" hidden>
+    <span class="sync-dot" id="syncDot" aria-hidden="true"></span>
+    <span class="sync-text" id="syncText"></span>
+    <button type="button" class="chip-btn" id="syncBtn"></button>
+  </div>
+
   <div class="quick">
     <button class="btn q-obs" type="button" data-new="obs"><span class="q-plus" aria-hidden="true">+</span>Sett</button>
     <button class="btn q-kill" type="button" data-new="kill"><span class="q-plus" aria-hidden="true">+</span>Fällt</button>
@@ -809,6 +823,26 @@ nav svg { width: 24px; height: 24px; }
   </div>
 </div>
 
+<div class="sheet-wrap" id="loginSheet" hidden role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <form class="sheet" id="loginForm" novalidate>
+    <div class="sheet-head">
+      <h2 id="loginTitle">Logga in</h2>
+      <button class="close-btn" id="loginClose" type="button" aria-label="Stäng"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <p class="lead">Logga in med kontot du skapade i Supabase. Då sparas loggen i molnet och följer med om du byter telefon. Den fungerar fortfarande utan täckning.</p>
+      <div class="more-grid">
+        <label>E-post<input id="loginEmail" type="email" autocomplete="username" inputmode="email" required></label>
+        <label>Lösenord<input id="loginPw" type="password" autocomplete="current-password" required></label>
+      </div>
+      <p class="lan-hint" id="loginMsg" role="status" aria-live="polite"></p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn primary" type="submit" id="loginSubmit">Logga in</button>
+    </div>
+  </form>
+</div>
+
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" aria-label="Meny" hidden>
   <div class="drawer-head">Jaktvind</div>
@@ -836,6 +870,8 @@ nav svg { width: 24px; height: 24px; }
   <button type="button" data-page="logg"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
 <script src="vendor/suncalc.js"></script>
 <script src="jakttider.js"></script>
 <script>
@@ -2067,13 +2103,14 @@ nav svg { width: 24px; height: 24px; }
     if (draft.type === 'note' && !draft.note && !draft.art) { $('sheetMsg').textContent = 'Skriv en anteckning eller välj en art.'; return; }
     if (draft.type === 'note') { draft.who = []; draft.n = 1; }
     const i = log.findIndex((e) => e.id === draft.id);
+    draft._s = false; queueOp(draft.id, 'up');
     if (i >= 0) log[i] = draft; else log.push(draft);
     if (!saveLog()) { $('sheetMsg').textContent = 'Kunde inte spara. Telefonens lagring kan vara full.'; return; }
     setPrefs({ pass: draft.pass, passAt: Date.now(), ...(draft.type === 'kill' && draft.weapon ? { weapon: draft.weapon } : {}) });
-    closeSheet(); renderLog();
+    closeSheet(); renderLog(); flushSync();
   });
   $('sheetDelete').addEventListener('click', (e) => confirmTap(e.currentTarget, 'Radera', 'Tryck igen', () => {
-    log = log.filter((x) => x.id !== draft.id); saveLog(); closeSheet(); renderLog();
+    queueOp(draft.id, 'del'); log = log.filter((x) => x.id !== draft.id); saveLog(); closeSheet(); renderLog(); flushSync();
   }));
 
   // ----- Tidslinjen -----
@@ -2095,6 +2132,7 @@ nav svg { width: 24px; height: 24px; }
     return t;
   }
   function renderLog() {
+    renderSyncBar();
     const kills = log.filter((e) => e.type === 'kill').reduce((n, e) => n + (e.n || 1), 0);
     $('loggMeta').innerHTML = log.length ? `${log.length} ${log.length === 1 ? 'post' : 'poster'}<br>${kills} fällt` : '&nbsp;';
     $('logFilters').hidden = !log.length; $('logExport').hidden = !log.length; $('logEmpty').hidden = !!log.length;
@@ -2195,6 +2233,188 @@ nav svg { width: 24px; height: 24px; }
       else if (pts.length) lmap.fitBounds(pts, { padding: [40, 40], maxZoom: 17 });
     }, 0);
     return missing;
+  }
+
+  // ----- Molnsynk (Supabase) -----
+  // Telefonen är alltid källan: ändringar sparas lokalt och läggs i en kö som skickas
+  // när det finns täckning och du är inloggad.
+  const CFG = window.JAKTVIND_CONFIG || {};
+  const AUTH_KEY = 'jaktvind-auth';
+  const idbKV = (() => {
+    let dbp;
+    const open = () => dbp || (dbp = new Promise((res, rej) => {
+      const r = indexedDB.open('jaktvind-auth', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('kv');
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    }));
+    const run = (mode, fn) => open().then((db) => new Promise((res, rej) => {
+      const t = db.transaction('kv', mode); const r = fn(t.objectStore('kv'));
+      t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error);
+    }));
+    return {
+      get: (k) => run('readonly', (st) => st.get(k)).catch(() => null),
+      set: (k, v) => run('readwrite', (st) => st.put(v, k)).catch(() => {}),
+      del: (k) => run('readwrite', (st) => st.delete(k)).catch(() => {})
+    };
+  })();
+  // Inloggningen sparas både i localStorage och IndexedDB, så den överlever om iOS rensar det ena
+  const authStorage = {
+    async getItem(k) {
+      let v = null;
+      try { v = localStorage.getItem(k); } catch (e) {}
+      if (v == null) { v = (await idbKV.get(k)) ?? null; if (v != null) try { localStorage.setItem(k, v); } catch (e) {} }
+      return v;
+    },
+    async setItem(k, v) { try { localStorage.setItem(k, v); } catch (e) {} await idbKV.set(k, v); },
+    async removeItem(k) { try { localStorage.removeItem(k); } catch (e) {} await idbKV.del(k); }
+  };
+  const sb = window.supabase && CFG.supabaseUrl && !DEMO ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storage: authStorage, storageKey: AUTH_KEY,
+      lock: (_n, _t, fn) => fn() } // hoppa över låset, som kan hänga i iOS hemskärmsappar
+  }) : null;
+  let sbUser = null, syncing = false, syncErr = '', lastSync = 0;
+  let queue = {};
+  try { queue = JSON.parse(localStorage.getItem(KEY + '.logQ')) || {}; } catch (e) { queue = {}; }
+  const saveQueue = () => { try { localStorage.setItem(KEY + '.logQ', JSON.stringify(queue)); } catch (e) {} };
+  function queueOp(id, op) { if (!sb) return; queue[id] = op; saveQueue(); }
+
+  const clampInt = (v, lo, hi) => (v == null || isNaN(v) ? null : Math.max(lo, Math.min(hi, Math.round(v))));
+  const toRow = (e) => ({
+    id: e.id, t: new Date(e.t).toISOString(), typ: e.type, art: e.art || null, kon: e.who || [],
+    antal: clampInt(e.n, 1, 99) || 1, avstand: clampInt(e.dist, 0, 5000), vapen: e.weapon || null, pass: e.pass || null,
+    anteckning: e.note || null, lat: e.lat ?? null, lon: e.lon ?? null, noggrannhet: e.acc ?? null, placerad: !!e.placed,
+    vader: e.wx || null, ljus: e.light || null, inom_skjuttid: e.inShoot ?? null, mane: e.moon || null, updated_at: new Date().toISOString()
+  });
+  const fromRow = (r, old) => ({
+    id: r.id, t: Date.parse(r.t), type: r.typ, art: r.art, who: r.kon || [], n: r.antal || 1, dist: r.avstand,
+    weapon: r.vapen || '', pass: r.pass || '', note: r.anteckning || '', lat: r.lat, lon: r.lon, acc: r.noggrannhet,
+    placed: !!r.placerad, wx: r.vader, light: r.ljus, inShoot: r.inom_skjuttid, moon: r.mane,
+    ...(old && old.me ? { me: old.me } : {}), _s: true
+  });
+
+  async function flushSync() {
+    if (!sb || !sbUser || syncing || !navigator.onLine) { renderSyncBar(); return; }
+    const ids = Object.keys(queue);
+    if (!ids.length) { renderSyncBar(); return; }
+    syncing = true; renderSyncBar();
+    try {
+      const ups = log.filter((e) => queue[e.id] === 'up');
+      if (ups.length) {
+        const { error } = await sb.from('logg').upsert(ups.map(toRow), { onConflict: 'id' });
+        if (error) throw error;
+        ups.forEach((e) => { e._s = true; if (queue[e.id] === 'up') delete queue[e.id]; });
+      }
+      const dels = ids.filter((id) => queue[id] === 'del');
+      if (dels.length) {
+        const { error } = await sb.from('logg').delete().in('id', dels);
+        if (error) throw error;
+        dels.forEach((id) => { delete queue[id]; });
+      }
+      // Köposter för id som inte längre finns lokalt och inte är raderingar
+      Object.keys(queue).forEach((id) => { if (queue[id] === 'up' && !log.some((e) => e.id === id)) delete queue[id]; });
+      saveQueue(); saveLog(); syncErr = ''; lastSync = Date.now();
+    } catch (e) { syncErr = navigator.onLine ? 'Kunde inte synka. Försöker igen senare.' : ''; }
+    syncing = false; renderSyncBar();
+  }
+
+  let pulling = null;
+  function pullSync() { if (!pulling) pulling = doPull().finally(() => { pulling = null; }); return pulling; }
+  async function doPull() {
+    if (!sb || !sbUser || !navigator.onLine) { renderSyncBar(); return; }
+    try {
+      const { data, error } = await sb.from('logg').select('*').order('t', { ascending: false }).limit(5000);
+      if (error) throw error;
+      const server = new Map(data.map((r) => [r.id, r]));
+      const next = [];
+      log.forEach((e) => {
+        if (queue[e.id]) next.push(e);                                   // lokal ändring väntar
+        else if (server.has(e.id)) next.push(fromRow(server.get(e.id), e));
+        else if (!e._s) { next.push(e); queue[e.id] = 'up'; }           // aldrig uppladdad: ladda upp
+        // annars: raderad i molnet
+      });
+      server.forEach((r, id) => { if (!next.some((e) => e.id === id) && queue[id] !== 'del') next.push(fromRow(r)); });
+      log = next; saveLog(); saveQueue(); syncErr = ''; lastSync = Date.now();
+      if (page === 'logg') renderLog();
+    } catch (e) { syncErr = 'Kunde inte hämta loggen från molnet.'; }
+    await flushSync();
+  }
+
+  function renderSyncBar() {
+    const bar = $('syncBar');
+    if (!sb) { bar.hidden = true; return; }
+    bar.hidden = false;
+    const pending = Object.keys(queue).length;
+    const dot = $('syncDot'), txt = $('syncText'), btn = $('syncBtn');
+    if (!sbUser) {
+      dot.className = 'sync-dot off';
+      txt.textContent = 'Loggen sparas bara i telefonen.';
+      btn.textContent = 'Logga in'; btn.dataset.act = 'login';
+      return;
+    }
+    btn.textContent = 'Logga ut'; btn.dataset.act = 'logout';
+    if (syncing) { dot.className = 'sync-dot wait'; txt.textContent = 'Synkar…'; return; }
+    if (pending) {
+      dot.className = 'sync-dot wait';
+      txt.textContent = `${pending} ${pending === 1 ? 'ändring väntar' : 'ändringar väntar'} på täckning`;
+      if (syncErr) txt.textContent = syncErr;
+      return;
+    }
+    dot.className = 'sync-dot ok';
+    txt.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = 'Sparad i molnet';
+    txt.append(b, document.createTextNode(` · ${sbUser.email || ''}`));
+  }
+
+  function openLogin() {
+    $('loginMsg').textContent = '';
+    try { $('loginEmail').value = localStorage.getItem(KEY + '.email') || ''; } catch (e) {}
+    $('loginPw').value = '';
+    $('loginSheet').hidden = false;
+    ($('loginEmail').value ? $('loginPw') : $('loginEmail')).focus();
+  }
+  const closeLogin = () => { $('loginSheet').hidden = true; };
+  $('loginClose').addEventListener('click', closeLogin);
+  $('loginSheet').addEventListener('click', (e) => { if (e.target === $('loginSheet')) closeLogin(); });
+  $('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('loginEmail').value.trim(), password = $('loginPw').value;
+    if (!email || !password) { $('loginMsg').textContent = 'Fyll i e-post och lösenord.'; return; }
+    if (!navigator.onLine) { $('loginMsg').textContent = 'Du behöver täckning för att logga in första gången.'; return; }
+    $('loginSubmit').disabled = true; $('loginSubmit').textContent = 'Loggar in…'; $('loginMsg').textContent = '';
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    $('loginSubmit').disabled = false; $('loginSubmit').textContent = 'Logga in';
+    if (error) { $('loginMsg').textContent = /invalid/i.test(error.message) ? 'Fel e-post eller lösenord.' : 'Kunde inte logga in. Försök igen.'; return; }
+    try { localStorage.setItem(KEY + '.email', email); } catch (_) {}
+    sbUser = data.user; closeLogin();
+    $('logEmpty').hidden = true;
+    await pullSync();
+  });
+  let logoutArmed = null;
+  $('syncBtn').addEventListener('click', async (e) => {
+    if (e.currentTarget.dataset.act === 'login') { openLogin(); return; }
+    const btn = e.currentTarget;
+    if (Object.keys(queue).length && !logoutArmed) {
+      btn.textContent = 'Osynkade ändringar, tryck igen';
+      logoutArmed = setTimeout(() => { logoutArmed = null; renderSyncBar(); }, 4000);
+      return;
+    }
+    clearTimeout(logoutArmed); logoutArmed = null;
+    try { await sb.auth.signOut(); } catch (_) {}
+    sbUser = null; renderSyncBar();
+  });
+
+  if (sb) {
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') { sbUser = null; renderSyncBar(); }
+      else if (session && session.user && !sbUser) { sbUser = session.user; pullSync(); }
+    });
+    (async () => {
+      try { const { data } = await sb.auth.getSession(); if (data.session) { sbUser = data.session.user; pullSync(); return; } } catch (e) {}
+      // Ingen färsk session (t.ex. dålig täckning). Finns en sparad används den; Supabase förnyar när nätet är tillbaka.
+      try { const saved = JSON.parse((await authStorage.getItem(AUTH_KEY)) || 'null'); if (saved && saved.user && saved.refresh_token) { sbUser = saved.user; renderSyncBar(); } } catch (e) {}
+    })();
+    window.addEventListener('online', () => pullSync());
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastSync > 60000) pullSync(); });
   }
 
   // ----- Export -----

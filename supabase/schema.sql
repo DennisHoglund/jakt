@@ -50,6 +50,10 @@ create policy "logg_delete" on public.logg for delete to authenticated
 
 -- Anonyma anrop får inga rättigheter alls på tabellen
 revoke all on public.logg from anon;
+-- Uttryckliga rättigheter för Data API (krävs för tabeller som skapas efter 30 okt 2026).
+-- Inloggade får CRUD, men RLS-reglerna ovan begränsar till egna rader. anon får inget.
+grant select, insert, update, delete on public.logg to authenticated;
+grant select, insert, update, delete on public.logg to service_role;
 
 -- ---------------------------------------------------------------------------
 -- Platser: pass, torn, åtlar, saltstenar och viltkameror
@@ -85,3 +89,7 @@ create policy "platser_delete" on public.platser for delete to authenticated
   using ((select auth.uid()) = user_id);
 
 revoke all on public.platser from anon;
+-- Uttryckliga rättigheter för Data API (krävs för tabeller som skapas efter 30 okt 2026).
+-- Inloggade får CRUD, men RLS-reglerna ovan begränsar till egna rader. anon får inget.
+grant select, insert, update, delete on public.platser to authenticated;
+grant select, insert, update, delete on public.platser to service_role;

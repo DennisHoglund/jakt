@@ -273,6 +273,35 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .more-grid { display: flex; flex-direction: column; gap: 10px; padding-top: 6px; }
 .more-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 
+/* Pass */
+.best-pass {
+  margin-top: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; min-height: 44px;
+  padding: 8px 14px; color: var(--fg); font-size: 15px; display: inline-flex; align-items: center; gap: 8px; text-align: left;
+}
+.best-pass i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.pass-wind { font-size: 15px; color: var(--muted); }
+.pass-card { background: var(--panel); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; border-left: 0; }
+.pc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.pc-name { font-family: var(--display); font-weight: 700; font-size: 23px; line-height: 1.1; }
+.pc-type { font-size: 13px; color: var(--muted); }
+.pc-line { font-size: 14px; color: var(--muted); }
+.pc-note { font-size: 14px; font-style: italic; }
+.rate { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.rate.good { background: #1F3A24; color: #8FD07A; } .rate.side { background: #3A2E14; color: #E8B95A; }
+.rate.bad { background: #45201A; color: #FF8A73; } .rate.none { background: var(--line); color: var(--muted); }
+.fc { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.fc div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fc i { width: 100%; height: 8px; border-radius: 4px; background: var(--line); }
+.fc i.good { background: #6BBF5A; } .fc i.side { background: #D9A441; } .fc i.bad { background: #D9604F; }
+.pc-actions { display: flex; gap: 8px; }
+.pc-actions .btn { flex: 1; min-height: 44px; font-size: 15px; }
+.dir-grid { display: grid; grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(3, 52px); gap: 6px; justify-content: center; }
+.dir-btn { border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font-weight: 600; font-size: 16px; }
+.dir-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #1B1406; }
+.dir-mid { display: grid; place-items: center; color: var(--muted); font-size: 22px; }
+.nav-body { align-items: center; padding-bottom: 24px; }
+.pass-pin { background: none; border: 0; }
+
 /* Molnsynk */
 .sync-bar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; background: var(--panel); border-radius: 12px; padding: 8px 8px 8px 14px; }
 .sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
@@ -369,7 +398,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 }
 
 nav {
-  border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   padding-top: 6px;
   padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
@@ -475,6 +504,7 @@ nav svg { width: 24px; height: 24px; }
       <span class="v-title" id="vTitle"></span>
     </div>
     <div class="rel" id="rel">&nbsp;</div>
+    <button type="button" class="best-pass" id="bestPass" hidden></button>
   </section>
 
   <section class="hours-wrap" aria-labelledby="hoursTitle">
@@ -844,6 +874,97 @@ nav svg { width: 24px; height: 24px; }
   </form>
 </div>
 
+<section class="page" id="pagePass" hidden aria-labelledby="passTitle">
+  <header class="top">
+    <div class="title-row">
+      <button class="menu-btn" type="button" data-menu aria-label="Öppna menyn" aria-controls="drawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div>
+        <div class="eyebrow">Pass och platser</div>
+        <h1 id="passTitle">Pass</h1>
+      </div>
+    </div>
+    <div class="meta" id="passMeta">&nbsp;</div>
+  </header>
+  <div class="pass-wind" id="passWind">&nbsp;</div>
+  <button class="btn primary" type="button" id="btnNewPass">+ Ny plats</button>
+  <p class="empty" id="passEmpty">Spara dina pass, torn, åtlar och viltkameror. Ange varifrån du väntar viltet, så visar appen vilka pass som har bra vind just nu och de närmaste timmarna.</p>
+  <div id="passList"></div>
+  <p class="lan-hint" id="passSyncMsg"></p>
+</section>
+
+<div class="sheet-wrap" id="passSheet" hidden role="dialog" aria-modal="true" aria-labelledby="passSheetTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="passSheetTitle">Ny plats</h2>
+      <button class="close-btn" id="passClose" type="button" aria-label="Stäng"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div class="more-grid">
+        <label>Namn<input id="pName" type="text" autocomplete="off" maxlength="60" placeholder="t.ex. Tallmyren"></label>
+      </div>
+      <div class="f-block">
+        <div class="eyebrow">Typ</div>
+        <div class="chips" id="pTypes" role="group" aria-label="Typ"></div>
+      </div>
+      <div class="f-block">
+        <div class="eyebrow">Viltet väntas från</div>
+        <div class="dir-grid" id="pDirs" role="group" aria-label="Varifrån viltet väntas"><button type="button" class="dir-btn" data-dir="7">NV</button><button type="button" class="dir-btn" data-dir="0">N</button><button type="button" class="dir-btn" data-dir="1">NO</button><button type="button" class="dir-btn" data-dir="6">V</button><span class="dir-mid" aria-hidden="true">◎</span><button type="button" class="dir-btn" data-dir="2">Ö</button><button type="button" class="dir-btn" data-dir="5">SV</button><button type="button" class="dir-btn" data-dir="4">S</button><button type="button" class="dir-btn" data-dir="3">SO</button></div>
+        <button type="button" class="link-btn" id="pFromCompass">Peka telefonen dit och tryck här</button>
+        <p class="place-hint">Bra vind är när det blåser från det hållet, så att din vittring drar bakåt. Välj flera om passet bevakar flera håll.</p>
+      </div>
+      <div class="f-block place-block">
+        <div class="place-row">
+          <div>
+            <div class="eyebrow">Plats</div>
+            <div class="place-text" id="pPlaceText">Där du står</div>
+          </div>
+          <button type="button" class="chip-btn" id="pPlaceBtn" aria-expanded="false">Placera på kartan</button>
+        </div>
+        <div class="place-map-wrap" id="pPlaceWrap" hidden>
+          <div id="pPlaceMap" class="place-map"></div>
+          <span class="place-hint">Tryck på kartan där platsen ligger, eller dra nålen.</span>
+        </div>
+      </div>
+      <div class="f-block">
+        <label class="eyebrow" for="pNote">Anteckning (valfritt)</label>
+        <textarea id="pNote" rows="2" placeholder="t.ex. Bäst på kvällen, se upp för stigen"></textarea>
+      </div>
+      <p class="lan-hint" id="pMsg" role="status" aria-live="polite"></p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn danger" type="button" id="pDelete" hidden>Radera</button>
+      <button class="btn primary" type="button" id="pSave">Spara</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="navSheet" hidden role="dialog" aria-modal="true" aria-labelledby="navTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="navTitle">Gå till</h2>
+      <button class="close-btn" id="navClose" type="button" aria-label="Stäng"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-body nav-body">
+      <svg class="back-dial" viewBox="0 0 300 300" role="img" id="navDial" aria-label="Riktning till platsen">
+        <circle cx="150" cy="150" r="138" fill="#13201A" stroke="#2E4436" stroke-width="2"/>
+        <circle cx="150" cy="150" r="90" fill="none" stroke="#2E4436" stroke-width="1" stroke-dasharray="3 6"/>
+        <path d="M150 4 l-7 12 h14 z" fill="#E8EDE4"/>
+        <g id="navArrow" transform="rotate(0 150 150)">
+          <path d="M150 34 L196 112 H166 V236 H134 V112 H104 Z" fill="#E07A3F" stroke="#FFF" stroke-width="3" stroke-linejoin="round"/>
+        </g>
+      </svg>
+      <div class="reading">
+        <div class="big" id="navDist">–</div>
+        <div class="sub" id="navDir">&nbsp;</div>
+        <div class="rel" id="navHint">&nbsp;</div>
+      </div>
+      <button class="compass-btn" data-compass type="button" hidden>Aktivera kompass</button>
+    </div>
+  </div>
+</div>
+
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" aria-label="Meny" hidden>
   <div class="drawer-head">Jaktvind</div>
@@ -856,17 +977,21 @@ nav svg { width: 24px; height: 24px; }
   <button type="button" class="drawer-item" data-page="ljus">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus och skjuttid
   </button>
+  <button type="button" class="drawer-item" data-page="pass">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7-5 7 5"/><path d="M7 9v4h10V9"/><path d="M8 13l-2 8M16 13l2 8M9 17h6"/></svg>Pass och platser
+  </button>
   <button type="button" class="drawer-item" data-page="logg">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg
   </button>
   <button type="button" class="drawer-item" data-page="jakt">
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Jakttider
   </button>
-  <div class="drawer-ver" id="appVer">Version 22</div>
+  <div class="drawer-ver" id="appVer">Version 23</div>
 </aside>
 
 <nav aria-label="Flikar">
   <button type="button" aria-current="page" id="navVind" data-page="vind"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/></svg>Vind</button>
+  <button type="button" data-page="pass"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7-5 7 5"/><path d="M7 9v4h10V9"/><path d="M8 13l-2 8M16 13l2 8M9 17h6"/></svg>Pass</button>
   <button type="button" data-page="ljus"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>Ljus</button>
   <button type="button" data-page="back"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6"/></svg>Start</button>
   <button type="button" data-page="logg"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Logg</button>
@@ -1086,6 +1211,8 @@ nav svg { width: 24px; height: 24px; }
     else { note.textContent = 'Stabil vindriktning närmaste timmarna'; note.classList.add('calm'); }
 
     updateMap();
+    renderBestPass();
+    if (page === 'pass') renderPass();
     const f = new Date(data.fetchedAt), age = (Date.now() - data.fetchedAt) / 36e5;
     $('meta').innerHTML = data.demo ? 'Exempeldata<br>&nbsp;'
       : `MET Norway · ${pad(f.getHours())}:${pad(f.getMinutes())}<br>${age >= 2 ? Math.floor(age) + ' tim gammal' : 'Sparad offline'}`;
@@ -1129,6 +1256,7 @@ nav svg { width: 24px; height: 24px; }
     $('rose').setAttribute('transform', `rotate(${-shown} 150 150)`);
     rotateHunter();
     if (page === 'back') updateBack();
+    if (navTarget) updateNav();
     if (ts - lastRel > 250) { updateRel(); lastRel = ts; }
     if (Math.abs(delta) > 0.3) requestAnimationFrame(tick); else { animating = false; updateRel(); }
   }
@@ -1253,6 +1381,7 @@ nav svg { width: 24px; height: 24px; }
       } else { startMarker.setLatLng(cl); startLine.setLatLngs([ll, cl]); }
     } else if (startMarker) { map.removeLayer(startMarker); map.removeLayer(startLine); startMarker = startLine = null; }
     drawTrack();
+    drawPassMarkers();
     if (follow) map.setView(ll, Math.max(map.getZoom(), 15), { animate: false });
     rotateHunter();
   }
@@ -1305,6 +1434,8 @@ nav svg { width: 24px; height: 24px; }
       recordPoint(pos, p.timestamp || Date.now());
       updateMap();
       updateBack();
+      if (navTarget) updateNav();
+      if (page === 'pass') renderPassThrottled();
     }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
   }
   function stopWatch() {
@@ -1312,7 +1443,7 @@ nav svg { width: 24px; height: 24px; }
   }
   // GPS behövs när kartan eller hitta tillbaka-sidan är synlig, och hela tiden medan ett spår spelas in
   function syncWatch() {
-    const need = (page === 'vind' && !$('mapView').hidden) || page === 'back' || (trip && trip.state === 'active');
+    const need = (page === 'vind' && !$('mapView').hidden) || page === 'back' || page === 'pass' || !!navTarget || (trip && trip.state === 'active');
     if (need) startWatch(); else stopWatch();
   }
 
@@ -1347,12 +1478,14 @@ nav svg { width: 24px; height: 24px; }
     $('pageBack').hidden = p !== 'back';
     $('pageLjus').hidden = p !== 'ljus';
     $('pageLogg').hidden = p !== 'logg';
+    $('pagePass').hidden = p !== 'pass';
     document.querySelectorAll('.drawer-item, nav [data-page]').forEach((b) => {
       if (b.dataset.page === p) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     if (p === 'jakt') { renderJakt(); detectLan(); }
     if (p === 'ljus') { dayOff = 0; renderLjus(); }
     if (p === 'logg') renderLog();
+    if (p === 'pass') renderPass();
     if (p === 'back') { updateBack(true); if (trip && trip.state === 'return') setRetView(retView); }
     if (p === 'vind' && !$('mapView').hidden) setTimeout(() => { if (map) { map.invalidateSize(); updateMap(); } }, 0);
     if (p !== 'back') releaseWake();
@@ -2332,6 +2465,7 @@ nav svg { width: 24px; height: 24px; }
         : /row-level security|42501|permission/i.test(m) ? 'Supabase nekade skrivning (RLS). Kontrollera schema.sql.' : 'Kunde inte synka. Försöker igen senare.';
     }
     syncing = false; renderSyncBar();
+    flushPlatser();
   }
 
   let pulling = null;
@@ -2352,6 +2486,7 @@ nav svg { width: 24px; height: 24px; }
       server.forEach((r, id) => { if (!next.some((e) => e.id === id) && queue[id] !== 'del') next.push(fromRow(r)); });
       log = next; saveLog(); saveQueue(); syncErr = ''; lastSync = Date.now(); cloudCount = data.length;
       if (page === 'logg') renderLog();
+      await pullPlatser();
     } catch (e) { syncErr = /relation|does not exist|could not find the table|PGRST205|42P01/i.test(e ? `${e.message || ''} ${e.code || ''}` : '') ? 'Tabellen logg saknas i Supabase. Kör supabase/schema.sql.' : 'Kunde inte hämta loggen från molnet.'; console.warn('pull', e); }
     await flushSync();
   }
@@ -2477,6 +2612,291 @@ nav svg { width: 24px; height: 24px; }
     msg.textContent = `Filen ${name} är sparad.`;
   });
 
+  // ---------- Pass och platser ----------
+  const PTYPES = { pass: 'Pass', torn: 'Torn', atel: 'Åtel', salt: 'Saltsten', kamera: 'Viltkamera', annat: 'Annan plats' };
+  const RATE_TXT = { good: 'Bra vind', side: 'Sidvind', bad: 'Dålig vind', none: 'Ingen riktning' };
+  const RATE_COL = { good: '#6BBF5A', side: '#D9A441', bad: '#D9604F', none: '#8E9C92' };
+  let platser = [];
+  try { platser = JSON.parse(localStorage.getItem(KEY + '.platser')) || []; } catch (e) { platser = []; }
+  let pQueue = {};
+  try { pQueue = JSON.parse(localStorage.getItem(KEY + '.platsQ')) || {}; } catch (e) { pQueue = {}; }
+  let pDraft = null, navTarget = null, pSyncErr = '', passLayer = null;
+  const savePlatser = () => { try { localStorage.setItem(KEY + '.platser', JSON.stringify(platser)); return true; } catch (e) { return false; } };
+  const savePQueue = () => { try { localStorage.setItem(KEY + '.platsQ', JSON.stringify(pQueue)); } catch (e) {} };
+  const pQueueOp = (id, op) => { if (!sb) return; pQueue[id] = op; savePQueue(); };
+
+  // Vindens riktning nu (k = 0) eller om k timmar
+  function hourIdx() { return data && data.h ? data.h.time.findIndex((t) => t.slice(0, 13) === hourKey(new Date())) : -1; }
+  function windIn(k) {
+    if (k === 0) return windFrom;
+    const i = hourIdx();
+    return i >= 0 && data.h.wind_direction_10m[i + k] != null ? data.h.wind_direction_10m[i + k] : null;
+  }
+  function rateFor(p, dir) {
+    if (!p.dirs || !p.dirs.length) return 'none';
+    if (dir == null) return null;
+    const off = Math.min(...p.dirs.map((d) => angDiff(dir, d * 45)));
+    return off <= 50 ? 'good' : off <= 120 ? 'side' : 'bad';
+  }
+  const RANK = { good: 0, side: 1, bad: 2, none: 3, null: 4 };
+  const dirsText = (p) => (p.dirs && p.dirs.length ? p.dirs.slice().sort((a, b) => a - b).map((d) => DIRS[d]).join(', ') : '');
+
+  function renderBestPass() {
+    const btn = $('bestPass');
+    const rated = platser.filter((p) => p.dirs && p.dirs.length);
+    if (!rated.length || windFrom == null) { btn.hidden = true; return; }
+    btn.hidden = false;
+    const sorted = rated.map((p) => ({ p, r: rateFor(p, windFrom), d: pos ? distBearing(pos, p).d : 0 }))
+      .sort((a, b) => RANK[a.r] - RANK[b.r] || a.d - b.d);
+    const best = sorted[0];
+    btn.innerHTML = '';
+    const dot = document.createElement('i'); dot.style.background = RATE_COL[best.r];
+    const t = document.createElement('span');
+    t.textContent = best.r === 'good' ? `Bästa pass just nu: ${best.p.name} ›` : best.r === 'side' ? `Bara sidvind just nu. Bäst: ${best.p.name} ›` : 'Inget pass har bra vind just nu ›';
+    btn.append(dot, t);
+  }
+  $('bestPass').addEventListener('click', () => showPage('pass'));
+
+  let lastPassRender = 0;
+  function renderPassThrottled() { if (Date.now() - lastPassRender > 3000) renderPass(); }
+  function renderPass() {
+    lastPassRender = Date.now();
+    $('passMeta').innerHTML = platser.length ? `${platser.length} ${platser.length === 1 ? 'plats' : 'platser'}` : '&nbsp;';
+    $('passWind').textContent = windFrom == null ? 'Ingen vinddata. Öppna Vind med täckning för att hämta prognosen.'
+      : `Vind just nu från ${dirName(windFrom)}. Vittringen drar mot ${dirName(windFrom + 180)}.`;
+    $('passEmpty').hidden = platser.length > 0;
+    $('passSyncMsg').textContent = pSyncErr;
+    const list = $('passList'); list.textContent = '';
+    const i0 = hourIdx();
+    const rows = platser.map((p) => ({ p, r: rateFor(p, windFrom), db: pos ? distBearing(pos, p) : null }))
+      .sort((a, b) => RANK[a.r] - RANK[b.r] || (a.db && b.db ? a.db.d - b.db.d : 0));
+    rows.forEach(({ p, r, db }) => {
+      const c = document.createElement('article'); c.className = 'pass-card';
+      const head = document.createElement('div'); head.className = 'pc-head';
+      const left = document.createElement('div');
+      const nm = document.createElement('div'); nm.className = 'pc-name'; nm.textContent = p.name;
+      const ty = document.createElement('div'); ty.className = 'pc-type'; ty.textContent = PTYPES[p.type] || 'Plats';
+      left.append(nm, ty);
+      const pill = document.createElement('span'); pill.className = 'rate ' + (r || 'none');
+      pill.textContent = r ? RATE_TXT[r] : 'Ingen vinddata';
+      head.append(left, pill); c.appendChild(head);
+      const info = [p.dirs && p.dirs.length ? `Viltet från ${dirsText(p)}` : null, db ? (db.d < 15 ? 'Där du står' : `${fmtDist(db.d)} åt ${dirName(db.b)}`) : null].filter(Boolean).join(' · ');
+      if (info) { const l = document.createElement('div'); l.className = 'pc-line'; l.textContent = info; c.appendChild(l); }
+      // Prognos: nu + 6 timmar
+      if (p.dirs && p.dirs.length && i0 >= 0) {
+        const fc = document.createElement('div'); fc.className = 'fc'; fc.setAttribute('aria-label', 'Vindbedömning de närmaste timmarna');
+        let next = null;
+        for (let k = 0; k <= 6; k++) {
+          const rr = rateFor(p, windIn(k));
+          const cell = document.createElement('div');
+          const bar = document.createElement('i'); if (rr) bar.className = rr;
+          const lab = document.createElement('span'); lab.textContent = k === 0 ? 'Nu' : data.h.time[i0 + k] ? data.h.time[i0 + k].slice(11, 13) : '';
+          cell.append(bar, lab); fc.appendChild(cell);
+          if (k > 0 && rr === 'good' && r !== 'good' && next == null) next = data.h.time[i0 + k].slice(11, 13);
+        }
+        c.appendChild(fc);
+        if (next) { const n = document.createElement('div'); n.className = 'pc-line'; n.textContent = `Bra vind från kl ${next}`; c.appendChild(n); }
+      }
+      if (p.note) { const n = document.createElement('div'); n.className = 'pc-note'; n.textContent = p.note; c.appendChild(n); }
+      const act = document.createElement('div'); act.className = 'pc-actions';
+      const go = document.createElement('button'); go.type = 'button'; go.className = 'btn'; go.textContent = 'Gå hit';
+      go.addEventListener('click', () => openNav(p));
+      const ed = document.createElement('button'); ed.type = 'button'; ed.className = 'btn'; ed.textContent = 'Ändra';
+      ed.addEventListener('click', () => openPassSheet(p));
+      act.append(go, ed); c.appendChild(act);
+      list.appendChild(c);
+    });
+  }
+
+  // ----- Kartan på vindsidan -----
+  let passSig = '';
+  function drawPassMarkers() {
+    if (!map) return;
+    if (!passLayer) passLayer = L.layerGroup().addTo(map);
+    // Rita bara om när platser eller vindbedömning ändrats, så öppna popuper inte stängs vid varje GPS-uppdatering
+    const sig = platser.map((p) => `${p.id}:${p.lat}:${p.lon}:${p.name}:${rateFor(p, windFrom)}`).join('|');
+    if (sig === passSig) return;
+    passSig = sig;
+    passLayer.clearLayers();
+    platser.forEach((p) => {
+      const r = rateFor(p, windFrom) || 'none';
+      const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: 'pass-pin', html: PIN(RATE_COL[r]), iconSize: [28, 38], iconAnchor: [14, 37], popupAnchor: [0, -34] }), keyboard: false, title: p.name }).addTo(passLayer);
+      const box = document.createElement('div');
+      const t = document.createElement('div'); t.className = 'pop-t'; t.textContent = p.name;
+      const mm = document.createElement('div'); mm.className = 'pop-m'; mm.textContent = `${PTYPES[p.type] || 'Plats'} · ${RATE_TXT[r]}`;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pop-btn'; b.textContent = 'Gå hit';
+      b.addEventListener('click', () => { map.closePopup(); openNav(p); });
+      box.append(t, mm, b);
+      m.bindPopup(box, { maxWidth: 240 });
+    });
+  }
+
+  // ----- Ark: ny / ändra -----
+  let ppMap = null, ppMarker = null;
+  function openPassSheet(p) {
+    $('pMsg').textContent = '';
+    if (p) pDraft = JSON.parse(JSON.stringify(p));
+    else {
+      const n = platser.filter((x) => x.type === 'pass').length + 1;
+      pDraft = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: '', type: 'pass', dirs: [], note: '', lat: null, lon: null, acc: null, placed: false };
+      $('pName').placeholder = `t.ex. Pass ${n}`;
+      if (pos && (Date.now() - posTs < 120000 || DEMO)) Object.assign(pDraft, { lat: pos.lat, lon: pos.lon, acc: pos.acc });
+      else if (navigator.geolocation && !DEMO) {
+        const id = pDraft.id;
+        navigator.geolocation.getCurrentPosition((g) => {
+          if (!pDraft || pDraft.id !== id || pDraft.placed) return;
+          pos = { lat: g.coords.latitude, lon: g.coords.longitude, acc: g.coords.accuracy }; posTs = Date.now();
+          Object.assign(pDraft, { lat: pos.lat, lon: pos.lon, acc: pos.acc }); pPlaceUi();
+          if (ppMarker) ppMarker.setLatLng([pos.lat, pos.lon]);
+        }, () => { if (pDraft && pDraft.lat == null) $('pPlaceText').textContent = 'Ingen position. Placera på kartan.'; }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+      }
+    }
+    $('passSheetTitle').textContent = p ? 'Ändra plats' : 'Ny plats';
+    $('pName').value = pDraft.name || '';
+    $('pNote').value = pDraft.note || '';
+    $('pDelete').hidden = !p; $('pDelete').textContent = 'Radera';
+    $('pPlaceWrap').hidden = true; $('pPlaceBtn').setAttribute('aria-expanded', 'false');
+    pTypesUi(); pDirsUi(); pPlaceUi();
+    $('passSheet').hidden = false; document.body.style.overflow = 'hidden';
+    $('passClose').focus();
+  }
+  function closePassSheet() { pDraft = null; $('passSheet').hidden = true; document.body.style.overflow = ''; }
+  function pTypesUi() {
+    const box = $('pTypes'); box.textContent = '';
+    Object.entries(PTYPES).forEach(([k, v]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip-btn'; b.textContent = v;
+      b.setAttribute('aria-pressed', String(pDraft.type === k));
+      b.addEventListener('click', () => { pDraft.type = k; pTypesUi(); });
+      box.appendChild(b);
+    });
+  }
+  function pDirsUi() {
+    document.querySelectorAll('#pDirs .dir-btn').forEach((b) => b.setAttribute('aria-pressed', String(pDraft.dirs.includes(+b.dataset.dir))));
+  }
+  function pPlaceUi() {
+    $('pPlaceText').textContent = pDraft.lat == null ? 'Söker position…'
+      : pDraft.placed ? 'Placerad på kartan' : (pDraft.acc ? `Där du står, ±${Math.round(pDraft.acc)} m` : 'Sparad position');
+    $('pPlaceBtn').textContent = pDraft.placed ? 'Flytta på kartan' : 'Placera på kartan';
+  }
+  document.querySelectorAll('#pDirs .dir-btn').forEach((b) => b.addEventListener('click', () => {
+    const d = +b.dataset.dir;
+    pDraft.dirs = pDraft.dirs.includes(d) ? pDraft.dirs.filter((x) => x !== d) : [...pDraft.dirs, d];
+    pDirsUi();
+  }));
+  $('pFromCompass').addEventListener('click', () => {
+    if (heading == null) { $('pMsg').textContent = needsPermission ? 'Aktivera kompassen på Vind-sidan först.' : 'Kompassen är inte tillgänglig. Välj riktning ovan.'; return; }
+    const d = Math.round(norm(shown) / 45) % 8;
+    if (!pDraft.dirs.includes(d)) pDraft.dirs.push(d);
+    pDirsUi(); $('pMsg').textContent = `La till ${DIRS[d]}.`;
+  });
+  $('pPlaceBtn').addEventListener('click', () => {
+    if (!$('pPlaceWrap').hidden) { $('pPlaceWrap').hidden = true; $('pPlaceBtn').setAttribute('aria-expanded', 'false'); return; }
+    if (typeof L === 'undefined') { $('pPlaceText').textContent = 'Kartan kunde inte laddas.'; return; }
+    $('pPlaceWrap').hidden = false; $('pPlaceBtn').setAttribute('aria-expanded', 'true');
+    const center = pDraft.lat != null ? [pDraft.lat, pDraft.lon] : pos ? [pos.lat, pos.lon] : [62.5, 16];
+    if (!ppMap) {
+      ppMap = L.map('pPlaceMap', { zoomControl: false, keyboard: false, maxZoom: 20 });
+      const { layers } = makeLayers();
+      let chosen = 'Stigar';
+      try { chosen = localStorage.getItem(KEY + '.layer2') || chosen; } catch (e) {}
+      (layers[chosen] || layers['Stigar']).addTo(ppMap);
+      L.control.layers(layers, null, { position: 'topright' }).addTo(ppMap);
+      ppMarker = L.marker(center, { icon: pinIcon('kill'), draggable: true, keyboard: false }).addTo(ppMap);
+      const setP = (ll) => { pDraft.lat = +ll.lat.toFixed(6); pDraft.lon = +ll.lng.toFixed(6); pDraft.acc = null; pDraft.placed = true; ppMarker.setLatLng(ll); pPlaceUi(); };
+      ppMarker.on('dragend', () => setP(ppMarker.getLatLng()));
+      ppMap.on('click', (e) => setP(e.latlng));
+    } else ppMarker.setLatLng(center);
+    setTimeout(() => { ppMap.invalidateSize(); ppMap.setView(center, pDraft.lat != null || pos ? 16 : 5); }, 0);
+  });
+  $('passClose').addEventListener('click', closePassSheet);
+  $('passSheet').addEventListener('click', (e) => { if (e.target === $('passSheet')) closePassSheet(); });
+  $('btnNewPass').addEventListener('click', () => openPassSheet(null));
+  $('pSave').addEventListener('click', () => {
+    pDraft.name = $('pName').value.trim() || $('pName').placeholder.replace(/^t\.ex\. /, '');
+    pDraft.note = $('pNote').value.trim();
+    if (pDraft.lat == null) { $('pMsg').textContent = 'Platsen saknar position. Vänta på GPS eller placera på kartan.'; return; }
+    pDraft._s = false;
+    const i = platser.findIndex((x) => x.id === pDraft.id);
+    if (i >= 0) platser[i] = pDraft; else platser.push(pDraft);
+    pQueueOp(pDraft.id, 'up');
+    if (!savePlatser()) { $('pMsg').textContent = 'Kunde inte spara. Telefonens lagring kan vara full.'; return; }
+    closePassSheet(); renderPass(); renderBestPass(); drawPassMarkers(); flushPlatser();
+  });
+  $('pDelete').addEventListener('click', (e) => confirmTap(e.currentTarget, 'Radera', 'Tryck igen', () => {
+    const id = pDraft.id;
+    platser = platser.filter((x) => x.id !== id); pQueueOp(id, 'del'); savePlatser();
+    closePassSheet(); renderPass(); renderBestPass(); drawPassMarkers(); flushPlatser();
+  }));
+
+  // ----- Gå hit -----
+  let lastNavText = 0;
+  function openNav(p) {
+    navTarget = p;
+    $('navTitle').textContent = p.name;
+    $('navSheet').hidden = false; document.body.style.overflow = 'hidden';
+    syncWatch(); updateNav(true);
+    $('navClose').focus();
+  }
+  function closeNav() { navTarget = null; $('navSheet').hidden = true; document.body.style.overflow = ''; syncWatch(); }
+  function updateNav(force) {
+    if (!navTarget) return;
+    if (!pos) { $('navDist').textContent = 'Söker position…'; return; }
+    const { d, b } = distBearing(pos, navTarget);
+    $('navArrow').setAttribute('transform', `rotate(${heading == null ? b : norm(b - shown)} 150 150)`);
+    if (!force && Date.now() - lastNavText < 300) return;
+    lastNavText = Date.now();
+    const near = d <= Math.max(15, pos.acc || 0);
+    $('navDist').textContent = near ? 'Du är framme' : fmtDist(d);
+    $('navDir').textContent = near ? navTarget.name : `${navTarget.name} ligger åt ${dirName(b)} (${Math.round(b)}°), fågelvägen`;
+    const r = rateFor(navTarget, windFrom);
+    $('navHint').textContent = heading == null ? 'Pilen visar riktningen med norr uppåt. Aktivera kompassen så följer den telefonen.'
+      : r && r !== 'none' ? `${RATE_TXT[r]} vid passet just nu` : ' ';
+  }
+  $('navClose').addEventListener('click', closeNav);
+  $('navSheet').addEventListener('click', (e) => { if (e.target === $('navSheet')) closeNav(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!$('navSheet').hidden) closeNav(); else if (!$('passSheet').hidden) closePassSheet();
+  });
+
+  // ----- Synk av platser -----
+  const pToRow = (p) => ({ id: p.id, namn: p.name, typ: p.type, lat: p.lat, lon: p.lon, bevakar: p.dirs || [], anteckning: p.note || null, placerad: !!p.placed, updated_at: new Date().toISOString() });
+  const pFromRow = (r) => ({ id: r.id, name: r.namn, type: r.typ, lat: r.lat, lon: r.lon, dirs: r.bevakar || [], note: r.anteckning || '', placed: !!r.placerad, acc: null, _s: true });
+  const missingTable = (e) => /relation|does not exist|could not find the table|PGRST205|42P01/i.test(e ? `${e.message || ''} ${e.code || ''}` : '');
+  let pFlushing = false;
+  async function flushPlatser() {
+    if (!sb || !sbUser || pFlushing || !navigator.onLine || !Object.keys(pQueue).length) return;
+    pFlushing = true;
+    try {
+      const ups = platser.filter((p) => pQueue[p.id] === 'up');
+      if (ups.length) { const { error } = await sb.from('platser').upsert(ups.map(pToRow), { onConflict: 'id' }); if (error) throw error; ups.forEach((p) => { p._s = true; delete pQueue[p.id]; }); }
+      const dels = Object.keys(pQueue).filter((id) => pQueue[id] === 'del');
+      if (dels.length) { const { error } = await sb.from('platser').delete().in('id', dels); if (error) throw error; dels.forEach((id) => delete pQueue[id]); }
+      Object.keys(pQueue).forEach((id) => { if (!platser.some((p) => p.id === id)) delete pQueue[id]; });
+      savePQueue(); savePlatser(); pSyncErr = '';
+    } catch (e) { console.warn('platser flush', e); pSyncErr = missingTable(e) ? 'Platserna synkas inte: kör supabase/schema.sql igen i Supabase.' : ''; }
+    pFlushing = false;
+    if (page === 'pass') $('passSyncMsg').textContent = pSyncErr;
+  }
+  async function pullPlatser() {
+    if (!sb || !sbUser) return;
+    try {
+      const { data: rows, error } = await sb.from('platser').select('*').limit(2000);
+      if (error) throw error;
+      const server = new Map(rows.map((r) => [r.id, r]));
+      const next = [];
+      platser.forEach((p) => {
+        if (pQueue[p.id]) next.push(p);
+        else if (server.has(p.id)) next.push(pFromRow(server.get(p.id)));
+        else if (!p._s) { next.push(p); pQueue[p.id] = 'up'; }
+      });
+      server.forEach((r, id) => { if (!next.some((p) => p.id === id) && pQueue[id] !== 'del') next.push(pFromRow(r)); });
+      platser = next; savePlatser(); savePQueue(); pSyncErr = '';
+      renderBestPass(); drawPassMarkers(); if (page === 'pass') renderPass();
+    } catch (e) { console.warn('platser pull', e); pSyncErr = missingTable(e) ? 'Platserna synkas inte: kör supabase/schema.sql igen i Supabase.' : ''; }
+    await flushPlatser();
+  }
+
   $('refreshBtn').addEventListener('click', refresh);
   // Hämta ny prognos när appen öppnas igen och den sparade är äldre än 30 min
   document.addEventListener('visibilitychange', () => { if (document.hidden) return; render(); if (!DEMO && (!data || Date.now() - data.fetchedAt > 30 * 60 * 1000)) refresh(); });
@@ -2490,7 +2910,7 @@ nav svg { width: 24px; height: 24px; }
   setView(startView);
   let startPage = 'vind';
   try { startPage = localStorage.getItem(KEY + '.page') || 'vind'; } catch (e) {}
-  if (['jakt', 'back', 'ljus', 'logg'].includes(startPage)) showPage(startPage);
+  if (['jakt', 'back', 'ljus', 'logg', 'pass'].includes(startPage)) showPage(startPage);
   refresh();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
